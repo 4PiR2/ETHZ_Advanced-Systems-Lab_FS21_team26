@@ -8,7 +8,7 @@ OBJ := $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 CC := gcc
 # modify #define branches here
-# DEF := 
+# DEF := -Dxxx
 
 CPPFLAGS := -Iinclude -MMD -MP $(DEF)
 CFLAGS   := -Wall
