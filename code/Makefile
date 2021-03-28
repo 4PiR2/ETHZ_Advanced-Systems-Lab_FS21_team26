@@ -4,7 +4,9 @@ BIN_DIR := bin
 
 EXE := $(BIN_DIR)/main
 SRC := $(wildcard $(SRC_DIR)/*.c)
-OBJ := $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+SRC += $(wildcard $(SRC_DIR)/*.cpp)
+
+OBJ := $(SRC:$(SRC_DIR)/%=$(OBJ_DIR)/%.o)
 
 CC := gcc
 # modify #define branches here
@@ -27,8 +29,12 @@ compile: $(EXE)
 $(EXE): $(OBJ) | $(BIN_DIR)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+$(OBJ_DIR)/%.c.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.cpp.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@ 
+	# change the above line to g++ if wanted
 
 $(BIN_DIR) $(OBJ_DIR):
 	@mkdir -p $@
