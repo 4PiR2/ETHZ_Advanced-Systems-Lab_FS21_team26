@@ -17,3 +17,7 @@ make clean && make # when changing only the -D flag in Makefile, by default it w
 
 ## Things to be careful with
 - OK to refer to the github code?
+
+## Datasets
+- Please go to our shared Google Drive folder
+

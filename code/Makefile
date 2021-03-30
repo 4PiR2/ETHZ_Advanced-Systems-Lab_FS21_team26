@@ -8,11 +8,11 @@ SRC += $(wildcard $(SRC_DIR)/*.cpp)
 
 OBJ := $(SRC:$(SRC_DIR)/%=$(OBJ_DIR)/%.o)
 
-CC := gcc
+CC := g++
 # modify #define branches here
 # DEF := -Dxxx
 
-CPPFLAGS := -Iinclude -MMD -MP $(DEF)
+CPPFLAGS := -Iinclude -MMD -MP $(DEF) -O3 -march=native -ffast-math
 CFLAGS   := -Wall
 LDFLAGS  := -Llib
 LDLIBS   := -lm
