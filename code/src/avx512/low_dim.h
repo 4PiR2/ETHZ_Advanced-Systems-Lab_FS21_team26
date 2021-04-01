@@ -146,15 +146,16 @@ float low_dim_pair_aff(float *t, float *y, int n_samples, int d_out) {
 	}
 	for (int i = n_samples, iN = i * N; i < N; ++i, iN += N) {
 		for (int j = 0; j < N; j += 16) {
-			csub += _mm512_load_ps(t + iN + j);
+			csub += _mm512_load_ps(t + iN + j); // TODO: loop unrolling 4x
 			_mm512_store_ps(t + iN + j, zerofs);
 		}
 	}
 	c -= csub + csub;
-	return _mm512_reduce_add_ps(c) + (N - n_samples) * (N - n_samples) - n_samples;
+	return _mm512_reduce_add_ps(c) + (float)((N - n_samples) * (N - n_samples) - n_samples);
 }
 
 void low_dim_update_calc(float *u, float *y, float *p, float *t, float t_sum, float eta, int n_samples, int d_out) {
+	// p: lower 16-blocked triangle
 	__m512i idx, ones = _mm512_set1_epi32(1);
 	__m512 b, a, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, ui, uj, csum, rsum,
 			p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15,
@@ -322,36 +323,6 @@ void low_dim_update_apply(float *y, float *u, float alpha, int n_samples, int d_
 			ui *= alphas;
 			_mm512_store_ps(y + kN + i, yi);
 			_mm512_store_ps(u + kN + i, ui);
-		}
-	}
-}
-
-void low_dim_center(float *y, int n_samples, int d_out) {
-	int N = (n_samples + 15) & (-1 ^ 15), lim = N - 48;
-	__m512 y0, y1, y2, y3, s0, s1, s2, s3, ym;
-	for (int k = 0, kN = 0; k < d_out; ++k, kN += N) {
-		s0 = s1 = s2 = s3 = (__m512) _mm512_set1_epi32(0);
-		int i;
-		for (i = 0; i < lim; i += 64) {
-			y0 = _mm512_load_ps(y + kN + i);
-			y1 = _mm512_load_ps(y + kN + i + 16);
-			y2 = _mm512_load_ps(y + kN + i + 32);
-			y3 = _mm512_load_ps(y + kN + i + 48);
-			s0 += y0;
-			s1 += y1;
-			s2 += y2;
-			s3 += y3;
-		}
-		for (; i < N; i += 16) {
-			y0 = _mm512_load_ps(y + kN + i);
-			s0 += y0;
-		}
-		float sum = _mm512_reduce_add_ps((s0 + s1) + (s2 + s3));
-		ym = _mm512_set1_ps(sum / n_samples);
-		for (i = 0; i < N; i += 16) {
-			y0 = _mm512_load_ps(y + kN + i);
-			y0 -= ym;
-			_mm512_store_ps(y + kN + i, y0);
 		}
 	}
 }

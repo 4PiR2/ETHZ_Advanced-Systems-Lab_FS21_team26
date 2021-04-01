@@ -39,14 +39,13 @@ void mat_clear_margin(T *p, int n, int m) {
 }
 
 template<typename T>
-void mat_transpose(T *p2, T *p, int n, int m) {
+void mat_transpose(T *pt, T *p, int n, int m) {
 	int N = GET_N(n), M = GET_N(m);
 	for (int j = 0, jN = 0; j < m; ++j, jN += N) {
 		for (int i = 0, iM = 0; i < n; ++i, iM += M) {
-			p2[jN + i] = p[iM + j];
+			pt[jN + i] = p[iM + j];
 		}
 	}
-	mat_clear_margin(p2, m, n);
 }
 
 template<typename T>
@@ -60,7 +59,6 @@ void mat_rand_norm(T *p, int n, int m, T mean, T std, bool use_seed, long unsign
 			p[iM + j] = d(use_seed ? gen1 : gen0);
 		}
 	}
-	mat_clear_margin(p, n, m);
 }
 
 template<typename T>
@@ -79,7 +77,6 @@ bool mat_load(T *p, int n, int m, const std::string &filename) {
 		getline(f, s);
 	}
 	f.close();
-	mat_clear_margin(p, n, m);
 	return true;
 }
 

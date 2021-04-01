@@ -13,12 +13,13 @@ static void run() {
 
 	auto y = mat_alloc<float>(d_out, n_samples), t = mat_alloc<float>(n_samples, n_samples),
 			u = mat_alloc<float>(d_out, n_samples), p = mat_alloc<float>(n_samples, n_samples),
-			y_trans = mat_alloc<float>(d_out, n_samples);
+			y_trans = mat_alloc<float>(n_samples, d_out);
 	mat_load(p, n_samples, n_samples,
 	         "datasets/random/random_sym_1000x1000.txt");
 	mat_clear(u, d_out, n_samples);
 	mat_load(y, d_out, n_samples,
 	         "datasets/random/random_normal_10x10000.txt");
+	mat_clear_margin(y, d_out, n_samples);
 
 	// get symmetric affinity
 	// getSymmetricAffinity(a, 1, 1, 1, b);
