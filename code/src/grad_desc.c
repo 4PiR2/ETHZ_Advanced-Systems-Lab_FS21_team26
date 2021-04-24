@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-void Gradient_descent(double* y, double* dy, double* grad_cy, double* p, double* t, double sum_t, int n, int d, int alpha, int eta) {
+void Gradient_descent(float* y, float* dy, float* grad_cy, float* p, float* t, float sum_t, int n, int d, int alpha, int eta) {
     for(int i=0; i<n; i++){
         for(int j=0; j<d; j++){
             for(int k=0; i<n; i++){
@@ -13,10 +13,10 @@ void Gradient_descent(double* y, double* dy, double* grad_cy, double* p, double*
     }
 }
 
-void compute_t(double* y, double* t, int n, int d){
+void compute_t(float* y, float* t, int n, int d){
     for(int i=0; i<n; i++){
         for(int j=0; j<n; j++){
-            double diff, dist = 0;
+            float diff, dist = 0;
             for(int k=0; k<d; k++){
                 diff = y[i*d+k] - y[j*d+k];
                 dist += diff * diff;
@@ -26,8 +26,8 @@ void compute_t(double* y, double* t, int n, int d){
     }
 }
 
-double compute_sum_t(double* t, int n){
-    double sum_t = 0;
+float compute_sum_t(float* t, int n){
+    float sum_t = 0;
     for(int i=0; i<n; i++){
         for(int j=0; j<n; j++){
             if(i!=j) sum_t += t[i*n+j];
