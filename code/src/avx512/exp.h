@@ -1,5 +1,5 @@
-#ifndef CPPROJ_EXP_H
-#define CPPROJ_EXP_H
+#ifndef EXP_H
+#define EXP_H
 
 #include "immintrin.h"
 
@@ -53,4 +53,4 @@ inline __m512 exp_ps(__m512 x) {
 	return y;
 }
 
-#endif //CPPROJ_EXP_H
+#endif //EXP_H

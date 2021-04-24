@@ -24,7 +24,7 @@ for i in range(rep):
 			g[i] += (p[i, j] - t[i, j] / t_sum) * (y[i] - y[j]) * t[i, j]
 	g *= 4
 
-	u = eta * g + alpha * u
+	u = -eta * g + alpha * u
 	y += u
 
 mat_target = y

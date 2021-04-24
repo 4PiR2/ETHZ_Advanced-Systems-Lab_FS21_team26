@@ -8,13 +8,14 @@
 #include <random>
 #include "immintrin.h"
 
-#define ALIGNMENT 4
-// 4: 16 elements (512-bit) | 3: 8 elements (256-bit) | 0: 1 element
-#define GET_N(n) (((n) + ((1 << (ALIGNMENT)) - 1)) & (-1 ^ ((1 << (ALIGNMENT)) - 1)))
+#define ALIGNMENT 512
+// ALIGNMENT: 512, 256, ..., sizeof(T) * 8
+
+#define GET_N(n, T) (((n) + (((ALIGNMENT) >> 3) / sizeof(T) - 1)) & (-1 ^ (((ALIGNMENT) >> 3) / sizeof(T) - 1)))
 
 template<typename T>
 T *mat_alloc(int n, int m) {
-	void *p = _mm_malloc(GET_N(n) * GET_N(m) * sizeof(T), 4096);
+	void *p = _mm_malloc(GET_N(n, T) * GET_N(m, T) * sizeof(T), 4096);
 	if (!p)
 		std::cerr << "Failed to allocate " << m << " x " << n << " matrix!" << std::endl;
 	return (T *) p;
@@ -29,18 +30,18 @@ void mat_free_batch(int num...) {
 	va_list ap;
 	va_start(ap, num);
 	for (int i = 0; i < num; i++)
-		_mm_free(va_arg(ap, void*));
+		_mm_free(va_arg(ap, void *));
 	va_end(ap);
 }
 
 template<typename T>
 void mat_clear(T *p, int n, int m) {
-	memset(p, 0, GET_N(n) * GET_N(m) * sizeof(T));
+	memset(p, 0, GET_N(n, T) * GET_N(m, T) * sizeof(T));
 }
 
 template<typename T>
 void mat_clear_margin(T *p, int n, int m) {
-	int N = GET_N(n), M = GET_N(m), M_m_s = (M - m) * sizeof(T);
+	int N = GET_N(n, T), M = GET_N(m, T), M_m_s = (M - m) * sizeof(T);
 	for (int i = 0, iMm = m; i < n; ++i, iMm += M) {
 		memset(p + iMm, 0, M_m_s);
 	}
@@ -49,7 +50,7 @@ void mat_clear_margin(T *p, int n, int m) {
 
 template<typename T>
 void mat_transpose(T *pt, T *p, int n, int m) {
-	int N = GET_N(n), M = GET_N(m);
+	int N = GET_N(n, T), M = GET_N(m, T);
 	for (int j = 0, jN = 0; j < m; ++j, jN += N) {
 		for (int i = 0, iM = 0; i < n; ++i, iM += M) {
 			pt[jN + i] = p[iM + j];
@@ -59,7 +60,7 @@ void mat_transpose(T *pt, T *p, int n, int m) {
 
 template<typename T>
 void mat_rand_norm(T *p, int n, int m, T mean, T std, bool use_seed, long unsigned int seed) {
-	int M = GET_N(m);
+	int M = GET_N(m, T);
 	std::random_device rd;
 	std::mt19937 gen0{rd()}, gen1{seed};
 	std::normal_distribution<T> d(mean, std);
@@ -77,7 +78,7 @@ bool mat_load(T *p, int n, int m, const std::string &filename) {
 		std::cerr << "Failed to open file: " << filename << "!" << std::endl;
 		return false;
 	}
-	int M = GET_N(m);
+	int M = GET_N(m, T);
 	std::string s;
 	for (int i = 0, iM = 0; i < n; ++i, iM += M) {
 		for (int j = 0; j < m; ++j) {
@@ -96,7 +97,7 @@ bool mat_store(T *p, int n, int m, const std::string &filename) {
 		std::cerr << "Failed to open file: " << filename << "!" << std::endl;
 		return false;
 	}
-	int M = GET_N(m);
+	int M = GET_N(m, T);
 	for (int i = 0, iM = 0; i < n; ++i, iM += M) {
 		for (int j = 0; j < m; ++j) {
 			f << p[iM + j] << "\t";

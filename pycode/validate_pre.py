@@ -10,48 +10,57 @@ for i in range(n_samples):
 	for j in range(n_samples):
 		p[i][j] = np.sum((x[i] - x[j]) ** 2)
 
-# p = np.loadtxt('datasets/random/random_1000x1000.txt', max_rows=n_samples)[:, :n_samples]
-
 perp_tar = 50
-sigma_l = 0
-sigma_r = 0
+# beta := -1 / (2 * sigma^2)
+beta_l = 0
+beta_r = 0
+beta_last = 0
+e_l = np.zeros(n_samples)
+e_m = np.zeros(n_samples)
+e_r = np.zeros(n_samples)
 epsilon = 1e-7
 
 count = 0
 betas = np.zeros(n_samples)
 
+h_tar = np.log(perp_tar)
 for i in range(n_samples):
-	sigma = (np.max(p[i]) / 2) ** 0.5
-	sigma_l_ub = True
-	sigma_r_ub = True
-	while True:
+	beta = -1 / np.max(p[i])
+	beta_l_ub = True
+	beta_r_ub = True
+	e_m = np.exp(p[i] * beta)
+	while beta != beta_last:
+		beta_last = beta
 		count += 1
-		pi = np.exp(-p[i] / (2 * sigma ** 2))
-		pi[i] = 1
-		pi /= np.sum(pi)
-		hi = -np.sum(pi * np.log2(pi))
-		perp = 2 ** hi
-		if perp < perp_tar - epsilon:
-			sigma_l = sigma
-			sigma_l_ub = False
-			if sigma_r_ub:
-				sigma *= 2
+		e_m = np.exp(p[i] * beta)
+		s = np.sum(e_m) - 1
+		h = -np.sum(e_m * p[i] * beta) / s + np.log(s)
+		prep = np.exp(h)
+		if h > h_tar + epsilon:
+			beta_l = beta
+			beta_l_ub = False
+			e_l = e_m
+			if beta_r_ub:
+				beta *= 2
+				e_m = e_m ** 2
 			else:
-				sigma = (sigma_l + sigma_r) / 2
-		elif perp > perp_tar + epsilon:
-			sigma_r = sigma
-			sigma_r_ub = False
-			if sigma_l_ub:
-				sigma /= 2
+				beta = (beta_l + beta_r) / 2
+				e_m = (e_l * e_r) ** 0.5
+		elif h < h_tar - epsilon:
+			beta_r = beta
+			beta_r_ub = False
+			e_r = e_m
+			if beta_l_ub:
+				beta /= 2
+				e_m = e_m ** 0.5
 			else:
-				sigma = (sigma_l + sigma) / 2
+				beta = (beta_l + beta) / 2
+				e_m = (e_l * e_r) ** 0.5
 		else:
 			break
-	p[i] = pi
+	p[i] = e_m / s
 	p[i, i] = 0
-	beta = -1 / (2 * sigma ** 2)
 	betas[i] = beta
-	a = 0
 
 count /= n_samples
 
@@ -59,7 +68,5 @@ p = (p + p.T) / (2 * n_samples)
 
 mat_target = p
 mat_test = np.loadtxt('output_matrix.txt')
-# mat_test[mat_test == 0] = mat_test.T[mat_test == 0]
 diff = np.abs((mat_target - mat_test) / mat_target)
 print(np.max(diff[mat_target != 0]))
-a = 0
