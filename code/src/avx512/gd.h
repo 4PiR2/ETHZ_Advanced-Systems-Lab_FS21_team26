@@ -1,15 +1,15 @@
-#ifndef CPP_LOW_DIM_H
-#define CPP_LOW_DIM_H
+#ifndef GD_H
+#define GD_H
 
-#include "immintrin.h"
 #include "block.h"
 
-float low_dim_pair_aff(float *t, float *y, int n_samples, int d_out) {
+float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
 	// t: lower 16-blocked triangle, diag elem = 1, margin = 0
 	// output: sum of matrix without diag
 	__m512i idx, ones = _mm512_set1_epi32(1);
 	__m512 b, a, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, zerofs = _mm512_setzero_ps(),
-			c = zerofs, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, csum, csub = zerofs,
+			c = zerofs, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, csum, csub0 = zerofs,
+			csub1 = zerofs, csub2 = zerofs, csub3 = zerofs,
 			onefs = (__m512) _mm512_set1_epi32(0x3f800000);
 	int N = (n_samples + 15) & (-1 ^ 15);
 	for (int i = 0; i < N; i += 16) {
@@ -83,54 +83,24 @@ float low_dim_pair_aff(float *t, float *y, int n_samples, int d_out) {
 				a15 -= b;
 				c15 = _mm512_fmadd_ps(a15, a15, c15);
 			}
-			float *s = t + i * N + j;
 			c0 = _mm512_rcp14_ps(c0 + onefs);
-			_mm512_store_ps(s, c0);
-			s += N;
 			c1 = _mm512_rcp14_ps(c1 + onefs);
-			_mm512_store_ps(s, c1);
-			s += N;
 			c2 = _mm512_rcp14_ps(c2 + onefs);
-			_mm512_store_ps(s, c2);
-			s += N;
 			c3 = _mm512_rcp14_ps(c3 + onefs);
-			_mm512_store_ps(s, c3);
-			s += N;
 			c4 = _mm512_rcp14_ps(c4 + onefs);
-			_mm512_store_ps(s, c4);
-			s += N;
 			c5 = _mm512_rcp14_ps(c5 + onefs);
-			_mm512_store_ps(s, c5);
-			s += N;
 			c6 = _mm512_rcp14_ps(c6 + onefs);
-			_mm512_store_ps(s, c6);
-			s += N;
 			c7 = _mm512_rcp14_ps(c7 + onefs);
-			_mm512_store_ps(s, c7);
-			s += N;
 			c8 = _mm512_rcp14_ps(c8 + onefs);
-			_mm512_store_ps(s, c8);
-			s += N;
 			c9 = _mm512_rcp14_ps(c9 + onefs);
-			_mm512_store_ps(s, c9);
-			s += N;
 			c10 = _mm512_rcp14_ps(c10 + onefs);
-			_mm512_store_ps(s, c10);
-			s += N;
 			c11 = _mm512_rcp14_ps(c11 + onefs);
-			_mm512_store_ps(s, c11);
-			s += N;
 			c12 = _mm512_rcp14_ps(c12 + onefs);
-			_mm512_store_ps(s, c12);
-			s += N;
 			c13 = _mm512_rcp14_ps(c13 + onefs);
-			_mm512_store_ps(s, c13);
-			s += N;
 			c14 = _mm512_rcp14_ps(c14 + onefs);
-			_mm512_store_ps(s, c14);
-			s += N;
 			c15 = _mm512_rcp14_ps(c15 + onefs);
-			_mm512_store_ps(s, c15);
+			block_store(t + i * N + j, N, c0, c1, c2, c3, c4, c5, c6, c7,
+			            c8, c9, c10, c11, c12, c13, c14, c15);
 			csum = (((c0 + c1) + (c2 + c3)) + ((c4 + c5) + (c6 + c7))) +
 			       (((c8 + c9) + (c10 + c11)) + ((c12 + c13) + (c14 + c15)));
 			c += csum;
@@ -144,90 +114,56 @@ float low_dim_pair_aff(float *t, float *y, int n_samples, int d_out) {
 			t[iN + j] = 0;
 		}
 	}
-	for (int i = n_samples, iN = i * N; i < N; ++i, iN += N) {
-		for (int j = 0; j < N; j += 16) {
-			csub += _mm512_load_ps(t + iN + j); // TODO: loop unrolling 4x
-			_mm512_store_ps(t + iN + j, zerofs);
-		}
+	int limit = N * N, lim = limit - 16 * (4 - 1), offset = n_samples * N;
+	for (; offset < lim; offset += 16 * 4) {
+		csub0 += _mm512_load_ps(t + offset);
+		_mm512_store_ps(t + offset, zerofs);
+		csub1 += _mm512_load_ps(t + offset + 16);
+		_mm512_store_ps(t + offset + 16, zerofs);
+		csub2 += _mm512_load_ps(t + offset + 32);
+		_mm512_store_ps(t + offset + 32, zerofs);
+		csub3 += _mm512_load_ps(t + offset + 48);
+		_mm512_store_ps(t + offset + 48, zerofs);
 	}
-	c -= csub + csub;
-	return _mm512_reduce_add_ps(c) + (float)((N - n_samples) * (N - n_samples) - n_samples);
+	for (; offset < limit; offset += 16) {
+		csub0 += _mm512_load_ps(t + offset);
+		_mm512_store_ps(t + offset, zerofs);
+	}
+	csub0 = (csub0 + csub1) + (csub2 + csub3);
+	c = _mm512_fnmadd_ps(csub0, onefs + onefs, c);
+	return _mm512_reduce_add_ps(c) + (float) ((N - n_samples) * (N - n_samples) - n_samples);
 }
 
-void low_dim_update_calc(float *u, float *y, float *p, float *t, float t_sum, float eta, int n_samples, int d_out) {
+void gd_update_calc(float *u, float *y, float *p, float *t, float t_sum, float eta, int n_samples, int d_out) {
 	// p: lower 16-blocked triangle
 	__m512i idx, ones = _mm512_set1_epi32(1);
 	__m512 b, a, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, ui, uj, csum, rsum,
 			p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15,
 			t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,
-			t_rcp = _mm512_set1_ps(-1.f / t_sum), etax4 = _mm512_set1_ps(eta * 4.f);
+			t_rcp = _mm512_set1_ps(1.f / t_sum), etax4 = _mm512_set1_ps(eta * 4.f);
 	int N = (n_samples + 15) & (-1 ^ 15);
 	for (int i = 0, iN = 0; i < N; i += 16, iN += N * 16) {
 		for (int j = 0; j <= i; j += 16) {
-			int iNj = i * N + j;
-			p0 = _mm512_load_ps(p + iNj);
-			t0 = _mm512_load_ps(t + iNj);
-			t0 = _mm512_fmadd_ps(t0, t_rcp, p0) * t0;
-			iNj += N;
-			p1 = _mm512_load_ps(p + iNj);
-			t1 = _mm512_load_ps(t + iNj);
-			t1 = _mm512_fmadd_ps(t1, t_rcp, p1) * t1;
-			iNj += N;
-			p2 = _mm512_load_ps(p + iNj);
-			t2 = _mm512_load_ps(t + iNj);
-			t2 = _mm512_fmadd_ps(t2, t_rcp, p2) * t2;
-			iNj += N;
-			p3 = _mm512_load_ps(p + iNj);
-			t3 = _mm512_load_ps(t + iNj);
-			t3 = _mm512_fmadd_ps(t3, t_rcp, p3) * t3;
-			iNj += N;
-			p4 = _mm512_load_ps(p + iNj);
-			t4 = _mm512_load_ps(t + iNj);
-			t4 = _mm512_fmadd_ps(t4, t_rcp, p4) * t4;
-			iNj += N;
-			p5 = _mm512_load_ps(p + iNj);
-			t5 = _mm512_load_ps(t + iNj);
-			t5 = _mm512_fmadd_ps(t5, t_rcp, p5) * t5;
-			iNj += N;
-			p6 = _mm512_load_ps(p + iNj);
-			t6 = _mm512_load_ps(t + iNj);
-			t6 = _mm512_fmadd_ps(t6, t_rcp, p6) * t6;
-			iNj += N;
-			p7 = _mm512_load_ps(p + iNj);
-			t7 = _mm512_load_ps(t + iNj);
-			t7 = _mm512_fmadd_ps(t7, t_rcp, p7) * t7;
-			iNj += N;
-			p8 = _mm512_load_ps(p + iNj);
-			t8 = _mm512_load_ps(t + iNj);
-			t8 = _mm512_fmadd_ps(t8, t_rcp, p8) * t8;
-			iNj += N;
-			p9 = _mm512_load_ps(p + iNj);
-			t9 = _mm512_load_ps(t + iNj);
-			t9 = _mm512_fmadd_ps(t9, t_rcp, p9) * t9;
-			iNj += N;
-			p10 = _mm512_load_ps(p + iNj);
-			t10 = _mm512_load_ps(t + iNj);
-			t10 = _mm512_fmadd_ps(t10, t_rcp, p10) * t10;
-			iNj += N;
-			p11 = _mm512_load_ps(p + iNj);
-			t11 = _mm512_load_ps(t + iNj);
-			t11 = _mm512_fmadd_ps(t11, t_rcp, p11) * t11;
-			iNj += N;
-			p12 = _mm512_load_ps(p + iNj);
-			t12 = _mm512_load_ps(t + iNj);
-			t12 = _mm512_fmadd_ps(t12, t_rcp, p12) * t12;
-			iNj += N;
-			p13 = _mm512_load_ps(p + iNj);
-			t13 = _mm512_load_ps(t + iNj);
-			t13 = _mm512_fmadd_ps(t13, t_rcp, p13) * t13;
-			iNj += N;
-			p14 = _mm512_load_ps(p + iNj);
-			t14 = _mm512_load_ps(t + iNj);
-			t14 = _mm512_fmadd_ps(t14, t_rcp, p14) * t14;
-			iNj += N;
-			p15 = _mm512_load_ps(p + iNj);
-			t15 = _mm512_load_ps(t + iNj);
-			t15 = _mm512_fmadd_ps(t15, t_rcp, p15) * t15;
+			block_load(p + i * N + j, N, p0, p1, p2, p3, p4, p5, p6, p7,
+			           p8, p9, p10, p11, p12, p13, p14, p15);
+			block_load(t + i * N + j, N, t0, t1, t2, t3, t4, t5, t6, t7,
+			           t8, t9, t10, t11, t12, t13, t14, t15);
+			t0 = _mm512_fnmadd_ps(t0, t_rcp, p0) * t0;
+			t1 = _mm512_fnmadd_ps(t1, t_rcp, p1) * t1;
+			t2 = _mm512_fnmadd_ps(t2, t_rcp, p2) * t2;
+			t3 = _mm512_fnmadd_ps(t3, t_rcp, p3) * t3;
+			t4 = _mm512_fnmadd_ps(t4, t_rcp, p4) * t4;
+			t5 = _mm512_fnmadd_ps(t5, t_rcp, p5) * t5;
+			t6 = _mm512_fnmadd_ps(t6, t_rcp, p6) * t6;
+			t7 = _mm512_fnmadd_ps(t7, t_rcp, p7) * t7;
+			t8 = _mm512_fnmadd_ps(t8, t_rcp, p8) * t8;
+			t9 = _mm512_fnmadd_ps(t9, t_rcp, p9) * t9;
+			t10 = _mm512_fnmadd_ps(t10, t_rcp, p10) * t10;
+			t11 = _mm512_fnmadd_ps(t11, t_rcp, p11) * t11;
+			t12 = _mm512_fnmadd_ps(t12, t_rcp, p12) * t12;
+			t13 = _mm512_fnmadd_ps(t13, t_rcp, p13) * t13;
+			t14 = _mm512_fnmadd_ps(t14, t_rcp, p14) * t14;
+			t15 = _mm512_fnmadd_ps(t15, t_rcp, p15) * t15;
 			for (int k = 0, kN = 0; k < d_out; ++k, kN += N) {
 				a = _mm512_load_ps(y + kN + i);
 				b = _mm512_load_ps(y + kN + j);
@@ -298,13 +234,13 @@ void low_dim_update_calc(float *u, float *y, float *p, float *t, float t_sum, fl
 				uj = _mm512_load_ps(u + kN + j);
 				csum = (((a0 + a1) + (a2 + a3)) + ((a4 + a5) + (a6 + a7))) +
 				       (((a8 + a9) + (a10 + a11)) + ((a12 + a13) + (a14 + a15)));
-				uj = _mm512_fnmadd_ps(csum, etax4, uj);
+				uj = _mm512_fmadd_ps(csum, etax4, uj);
 				_mm512_store_ps(u + kN + j, uj);
 				if (i != j) {
 					ui = _mm512_load_ps(u + kN + i);
 					rsum = block_row_sum(a0, a1, a2, a3, a4, a5, a6, a7,
 					                     a8, a9, a10, a11, a12, a13, a14, a15);
-					ui = _mm512_fmadd_ps(rsum, etax4, ui);
+					ui = _mm512_fnmadd_ps(rsum, etax4, ui);
 					_mm512_store_ps(u + kN + i, ui);
 				}
 			}
@@ -312,7 +248,7 @@ void low_dim_update_calc(float *u, float *y, float *p, float *t, float t_sum, fl
 	}
 }
 
-void low_dim_update_apply(float *y, float *u, float alpha, int n_samples, int d_out) {
+void gd_update_apply(float *y, float *u, float alpha, int n_samples, int d_out) {
 	int N = (n_samples + 15) & (-1 ^ 15);
 	__m512 yi, ui, alphas = _mm512_set1_ps(alpha);
 	for (int k = 0, kN = 0; k < d_out; ++k, kN += N) {
@@ -327,4 +263,4 @@ void low_dim_update_apply(float *y, float *u, float alpha, int n_samples, int d_
 	}
 }
 
-#endif //CPP_LOW_DIM_H
+#endif //GD_H

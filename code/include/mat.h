@@ -1,14 +1,15 @@
-#ifndef CPP_MAT_H
-#define CPP_MAT_H
+#ifndef MAT_H
+#define MAT_H
 
-#include <iostream>
-#include <fstream>
+#include <cstdarg>
 #include <cstring>
+#include <fstream>
+#include <iostream>
 #include <random>
 #include "immintrin.h"
 
 #define ALIGNMENT 4
-// 4: 16 elements (512-bit, recommended) | 3: 8 elements (256-bit) | 0: 1 element
+// 4: 16 elements (512-bit) | 3: 8 elements (256-bit) | 0: 1 element
 #define GET_N(n) (((n) + ((1 << (ALIGNMENT)) - 1)) & (-1 ^ ((1 << (ALIGNMENT)) - 1)))
 
 template<typename T>
@@ -22,6 +23,14 @@ T *mat_alloc(int n, int m) {
 template<typename T>
 void mat_free(T *p) {
 	_mm_free(p);
+}
+
+void mat_free_batch(int num...) {
+	va_list ap;
+	va_start(ap, num);
+	for (int i = 0; i < num; i++)
+		_mm_free(va_arg(ap, void*));
+	va_end(ap);
 }
 
 template<typename T>
@@ -98,4 +107,4 @@ bool mat_store(T *p, int n, int m, const std::string &filename) {
 	return true;
 }
 
-#endif //CPP_MAT_H
+#endif //MAT_H

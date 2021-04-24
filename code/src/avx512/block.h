@@ -1,5 +1,5 @@
-#ifndef CPP_BLOCK_H
-#define CPP_BLOCK_H
+#ifndef BLOCK_H
+#define BLOCK_H
 
 #include "immintrin.h"
 
@@ -69,7 +69,7 @@ inline void block_transpose(__m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
 	r4 = _mm512_permutex2var_ps(tc4, idxc0, tc12);
 	r5 = _mm512_permutex2var_ps(tc5, idxc0, tc13);
 	r6 = _mm512_permutex2var_ps(tc6, idxc0, tc14);
-	r7 = _mm512_permutex2var_ps(tc7, idxc0, tc11);
+	r7 = _mm512_permutex2var_ps(tc7, idxc0, tc15);
 	r8 = _mm512_permutex2var_ps(tc0, idxc1, tc8);
 	r9 = _mm512_permutex2var_ps(tc1, idxc1, tc9);
 	r10 = _mm512_permutex2var_ps(tc2, idxc1, tc10);
@@ -110,4 +110,92 @@ inline __m512 block_row_sum(__m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
 	return _mm512_permutex2var_ps(tc0, idxc0, tc8) + _mm512_permutex2var_ps(tc0, idxc1, tc8);
 }
 
-#endif //CPP_BLOCK_H
+inline void block_load(float *p, int M, __m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
+                       __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
+                       __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
+                       __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
+	r0 = _mm512_load_ps(p);
+	r1 = _mm512_load_ps(p + M);
+	r2 = _mm512_load_ps(p + M * 2);
+	r3 = _mm512_load_ps(p + M * 3);
+	r4 = _mm512_load_ps(p + M * 4);
+	r5 = _mm512_load_ps(p + M * 5);
+	r6 = _mm512_load_ps(p + M * 6);
+	r7 = _mm512_load_ps(p + M * 7);
+	r8 = _mm512_load_ps(p + M * 8);
+	r9 = _mm512_load_ps(p + M * 9);
+	r10 = _mm512_load_ps(p + M * 10);
+	r11 = _mm512_load_ps(p + M * 11);
+	r12 = _mm512_load_ps(p + M * 12);
+	r13 = _mm512_load_ps(p + M * 13);
+	r14 = _mm512_load_ps(p + M * 14);
+	r15 = _mm512_load_ps(p + M * 15);
+}
+
+inline void block_store(float *p, int M, __m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
+                        __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
+                        __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
+                        __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
+	_mm512_store_ps(p, r0);
+	_mm512_store_ps(p + M, r1);
+	_mm512_store_ps(p + M * 2, r2);
+	_mm512_store_ps(p + M * 3, r3);
+	_mm512_store_ps(p + M * 4, r4);
+	_mm512_store_ps(p + M * 5, r5);
+	_mm512_store_ps(p + M * 6, r6);
+	_mm512_store_ps(p + M * 7, r7);
+	_mm512_store_ps(p + M * 8, r8);
+	_mm512_store_ps(p + M * 9, r9);
+	_mm512_store_ps(p + M * 10, r10);
+	_mm512_store_ps(p + M * 11, r11);
+	_mm512_store_ps(p + M * 12, r12);
+	_mm512_store_ps(p + M * 13, r13);
+	_mm512_store_ps(p + M * 14, r14);
+	_mm512_store_ps(p + M * 15, r15);
+}
+
+void block_debug_load(float a[][16], __m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
+                      __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
+                      __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
+                      __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
+	r0 = _mm512_loadu_ps(a[0]);
+	r1 = _mm512_loadu_ps(a[1]);
+	r2 = _mm512_loadu_ps(a[2]);
+	r3 = _mm512_loadu_ps(a[3]);
+	r4 = _mm512_loadu_ps(a[4]);
+	r5 = _mm512_loadu_ps(a[5]);
+	r6 = _mm512_loadu_ps(a[6]);
+	r7 = _mm512_loadu_ps(a[7]);
+	r8 = _mm512_loadu_ps(a[8]);
+	r9 = _mm512_loadu_ps(a[9]);
+	r10 = _mm512_loadu_ps(a[10]);
+	r11 = _mm512_loadu_ps(a[11]);
+	r12 = _mm512_loadu_ps(a[12]);
+	r13 = _mm512_loadu_ps(a[13]);
+	r14 = _mm512_loadu_ps(a[14]);
+	r15 = _mm512_loadu_ps(a[15]);
+}
+
+void block_debug_store(float a[][16], __m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
+                       __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
+                       __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
+                       __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
+	_mm512_storeu_ps(a[0], r0);
+	_mm512_storeu_ps(a[1], r1);
+	_mm512_storeu_ps(a[2], r2);
+	_mm512_storeu_ps(a[3], r3);
+	_mm512_storeu_ps(a[4], r4);
+	_mm512_storeu_ps(a[5], r5);
+	_mm512_storeu_ps(a[6], r6);
+	_mm512_storeu_ps(a[7], r7);
+	_mm512_storeu_ps(a[8], r8);
+	_mm512_storeu_ps(a[9], r9);
+	_mm512_storeu_ps(a[10], r10);
+	_mm512_storeu_ps(a[11], r11);
+	_mm512_storeu_ps(a[12], r12);
+	_mm512_storeu_ps(a[13], r13);
+	_mm512_storeu_ps(a[14], r14);
+	_mm512_storeu_ps(a[15], r15);
+}
+
+#endif //BLOCK_H

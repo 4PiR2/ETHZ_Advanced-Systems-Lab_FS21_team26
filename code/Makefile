@@ -13,6 +13,7 @@ CC := g++
 # DEF := -Dxxx
 
 CPPFLAGS := -Iinclude -MMD -MP $(DEF) -O3 -march=native -ffast-math
+# To compile AVX-512 version, set -march=icelake-client flag!
 CFLAGS   := -Wall
 LDFLAGS  := -Llib
 LDLIBS   := -lm
