@@ -42,5 +42,8 @@ $(BIN_DIR) $(OBJ_DIR):
 clean:
 	@rm -rf $(BIN_DIR) $(OBJ_DIR) 2>/dev/null
 
--include $(OBJS:.o=.d)
+test_benchmark: test/test_benchmark.c
+	$(CC) $(CPPFLAGS) -o bin/test_benchmark test/test_benchmark.c && ./bin/test_benchmark
+
+# -include $(OBJS:.o=.d)
 
