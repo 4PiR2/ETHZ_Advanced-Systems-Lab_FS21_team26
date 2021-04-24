@@ -21,4 +21,14 @@ void getSymmetricAffinity(double* x, int n, int d, int perp, double* affinity);
  */
 void getLowdResult(double* affinity, int n, int d, double* y);
 
+/**
+ * \brief compute squared euclidean distance
+ *
+ * @param X
+ * @param N
+ * @param D
+ * @param DD
+ */
+void getSquaredEuclideanDistances(double* X, int N, int D, double* DD);
+
 #endif
