@@ -84,7 +84,7 @@ int pre_perplex_bi_search(float *p, float perplexity, float epsilon, int max_ite
 	__m512 d, d_max, e, el, er, betas, sum_e, nsum_edb, ss, zerofs = _mm512_setzero_ps();
 	__mmask16 mask;
 	int N = (n_samples + 15) & (-1 ^ 15), mode, iter, count = 0;
-	float beta, beta_l, beta_r, beta_last = 0, h, s,
+	float beta, beta_l, beta_r, beta_last = 0.f, h, s,
 			h_tar = logf(perplexity), h_tar_u = h_tar + epsilon, h_tar_l = h_tar - epsilon,
 			*e_m = temp_3n, *e_l = e_m + N, *e_r = e_l + N;
 	// beta = -.5f / (sigma * sigma)
@@ -129,15 +129,8 @@ int pre_perplex_bi_search(float *p, float perplexity, float epsilon, int max_ite
 				nsum_edb = _mm512_fnmadd_ps(e * d, betas, nsum_edb);
 			}
 			s = _mm512_reduce_add_ps(sum_e);
-			//s -= (float) (1 + (N - n_samples));
 			h = _mm512_reduce_add_ps(nsum_edb) / s + logf(s);
-			/*if (!std::isfinite(h)) {
-				//beta_r = beta;
-				//ub_r = false;
-				//beta *= .5f;
-				//mode = 0;
-				std::cerr << "error at pre_perplex_bi_search" << std::endl;
-			} else */if (h > h_tar_u) {
+			if (h > h_tar_u) {
 				beta_l = beta;
 				ub_l = false;
 				std::swap(e_m, e_l);
@@ -168,52 +161,15 @@ int pre_perplex_bi_search(float *p, float perplexity, float epsilon, int max_ite
 			e = _mm512_load_ps(e_m + j);
 			_mm512_store_ps(p + iN + j, e * ss);
 		}
-		//std::cout << beta << std::endl;
-		//temp_3n[N * 3 + i] = beta;
 		count += iter;
 	}
 	return count;
 }
 
-void pre_sym_aff(float *p, int n_samples) {
-	__m512 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15,
-			c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15,
-			k = _mm512_set1_ps(.5f / (float) n_samples);
-	int N = (n_samples + 15) & (-1 ^ 15);
-	for (int i = 0, iN = i * N; i < N; i += 16, iN += N * 16) {
-		for (int j = 0, jN = 0; j <= i; j += 16, jN += N * 16) {
-			block_load(p + jN + i, N, c0, c1, c2, c3, c4, c5, c6, c7,
-			           c8, c9, c10, c11, c12, c13, c14, c15);
-			block_transpose(c0, c1, c2, c3, c4, c5, c6, c7,
-			                c8, c9, c10, c11, c12, c13, c14, c15);
-			block_load(p + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
-			           r8, r9, r10, r11, r12, r13, r14, r15);
-			r0 = (r0 + c0) * k;
-			r1 = (r1 + c1) * k;
-			r2 = (r2 + c2) * k;
-			r3 = (r3 + c3) * k;
-			r4 = (r4 + c4) * k;
-			r5 = (r5 + c5) * k;
-			r6 = (r6 + c6) * k;
-			r7 = (r7 + c7) * k;
-			r8 = (r8 + c8) * k;
-			r9 = (r9 + c9) * k;
-			r10 = (r10 + c10) * k;
-			r11 = (r11 + c11) * k;
-			r12 = (r12 + c12) * k;
-			r13 = (r13 + c13) * k;
-			r14 = (r14 + c14) * k;
-			r15 = (r15 + c15) * k;
-			block_store(p + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
-			            r8, r9, r10, r11, r12, r13, r14, r15);
-		}
-	}
-}
-
 void pre_sym_aff_ex(float *p, float *p_ex, float ex_rate, int n_samples) {
 	__m512 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15,
 			c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15,
-			k = _mm512_set1_ps(.5f / (float) n_samples), ex = _mm512_set1_ps(ex_rate);
+			k = _mm512_set1_ps(.5f / (float) n_samples), ex_rates = _mm512_set1_ps(ex_rate);
 	int N = (n_samples + 15) & (-1 ^ 15);
 	for (int i = 0, iN = i * N; i < N; i += 16, iN += N * 16) {
 		for (int j = 0, jN = 0; j <= i; j += 16, jN += N * 16) {
@@ -241,24 +197,26 @@ void pre_sym_aff_ex(float *p, float *p_ex, float ex_rate, int n_samples) {
 			r15 = (r15 + c15) * k;
 			block_store(p + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
 			            r8, r9, r10, r11, r12, r13, r14, r15);
-			r0 *= ex;
-			r1 *= ex;
-			r2 *= ex;
-			r3 *= ex;
-			r4 *= ex;
-			r5 *= ex;
-			r6 *= ex;
-			r7 *= ex;
-			r8 *= ex;
-			r9 *= ex;
-			r10 *= ex;
-			r11 *= ex;
-			r12 *= ex;
-			r13 *= ex;
-			r14 *= ex;
-			r15 *= ex;
-			block_store(p_ex + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
-			            r8, r9, r10, r11, r12, r13, r14, r15);
+			if (p_ex) {
+				r0 *= ex_rates;
+				r1 *= ex_rates;
+				r2 *= ex_rates;
+				r3 *= ex_rates;
+				r4 *= ex_rates;
+				r5 *= ex_rates;
+				r6 *= ex_rates;
+				r7 *= ex_rates;
+				r8 *= ex_rates;
+				r9 *= ex_rates;
+				r10 *= ex_rates;
+				r11 *= ex_rates;
+				r12 *= ex_rates;
+				r13 *= ex_rates;
+				r14 *= ex_rates;
+				r15 *= ex_rates;
+				block_store(p_ex + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
+				            r8, r9, r10, r11, r12, r13, r14, r15);
+			}
 		}
 	}
 }

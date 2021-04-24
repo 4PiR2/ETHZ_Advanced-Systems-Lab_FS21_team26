@@ -8,7 +8,7 @@ inline __m512 exp_ps(__m512 x) {
 	__m512 exp_lo = _mm512_set1_ps(-88.3762626647949f);
 
 	__m512 cephes_LOG2EF = _mm512_set1_ps(1.44269504088896341f);
-	__m512 inv_LOG2EF = _mm512_set1_ps(0.693147180559945f);
+	__m512 inv_LOG2EF = _mm512_set1_ps(.693147180559945f);
 
 	__m512 cephes_exp_p0 = _mm512_set1_ps(1.9875691500E-4f);
 	__m512 cephes_exp_p1 = _mm512_set1_ps(1.3981999507E-3f);
