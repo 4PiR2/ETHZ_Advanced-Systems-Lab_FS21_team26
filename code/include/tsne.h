@@ -8,7 +8,7 @@
  * \param perp: perplexity input
  * \param affinity: write back the return value here
  */
-void getSymmetricAffinity(double* x, int n, int d, int perp, double* affinity);
+void getSymmetricAffinity(float* x, int n, int d, int perp, float* affinity);
 
 
 /**
@@ -29,6 +29,6 @@ void getLowdResult(double* affinity, int n, int d, double* y);
  * @param D
  * @param DD
  */
-void getSquaredEuclideanDistances(double* X, int N, int D, double* DD);
+void getSquaredEuclideanDistances(float* X, int N, int D, float* DD);
 
 #endif
