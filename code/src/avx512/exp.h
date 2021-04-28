@@ -26,30 +26,21 @@ inline __m512 exp_ps(__m512 x) {
 	/* express exp(x) as exp(g + n*log(2)) */
 	fx = x * cephes_LOG2EF;
 	fx = _mm512_roundscale_ps(fx, _MM_FROUND_TO_NEAREST_INT);
-	__m512 z = fx * inv_LOG2EF;
-	x -= z;
-	z = x * x;
+	x = _mm512_fnmadd_ps(fx, inv_LOG2EF, x);
 
 	__m512 y = cephes_exp_p0;
-	y *= x;
-	y += cephes_exp_p1;
-	y *= x;
-	y += cephes_exp_p2;
-	y *= x;
-	y += cephes_exp_p3;
-	y *= x;
-	y += cephes_exp_p4;
-	y *= x;
-	y += cephes_exp_p5;
-	y *= z;
-	y += x + one;
+	y = _mm512_fmadd_ps(y, x, cephes_exp_p1);
+	y = _mm512_fmadd_ps(y, x, cephes_exp_p2);
+	y = _mm512_fmadd_ps(y, x, cephes_exp_p3);
+	y = _mm512_fmadd_ps(y, x, cephes_exp_p4);
+	y = _mm512_fmadd_ps(y, x, cephes_exp_p5);
+	y = _mm512_fmadd_ps(y, x * x, x + one);
 
 	/* build 2^n */
 	imm0 = _mm512_cvttps_epi32(fx);
 	imm0 = _mm512_add_epi32(imm0, _mm512_set1_epi32(0x7f));
 	imm0 = _mm512_slli_epi32(imm0, 23);
-	auto pow2n = (__m512) imm0;
-	y *= pow2n;
+	y *= (__m512) imm0;
 	return y;
 }
 
