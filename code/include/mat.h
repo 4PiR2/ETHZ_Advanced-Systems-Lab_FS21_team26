@@ -108,4 +108,13 @@ bool mat_store(T *p, int n, int m, const std::string &filename) {
 	return true;
 }
 
+template<typename T>
+void mat_read_data(T *x, T *y, T *u, const std::string &filename, int seed, int n_samples, int d_in, int d_out) {
+	mat_clear(u, d_out, n_samples);
+	mat_clear_margin(y, d_out, n_samples);
+	mat_rand_norm(y, d_out, n_samples, 0.f, 1e-4f, true, seed);
+	mat_clear_margin(x, n_samples, d_in);
+	mat_load(x, n_samples, d_in, filename);
+}
+
 #endif //MAT_H
