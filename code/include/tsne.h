@@ -19,7 +19,7 @@ void getSymmetricAffinity(float* x, int n, int d, int perp, float* affinity);
  * \param d: output dimention
  * \param y: result
  */
-void getLowdResult(double* affinity, int n, int d, double* y);
+void getLowDimResult(float* y, float* dy, float* grad_cy, float* p, float* t, int n, int d, int alpha, int eta, int n_iter);
 
 /**
  * \brief compute squared euclidean distance
