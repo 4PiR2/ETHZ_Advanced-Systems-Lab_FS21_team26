@@ -7,7 +7,7 @@ void Gradient_descent(float* y, float* dy, float* grad_cy, float* p, float* t, f
                 grad_cy[i*d+j] += (p[i*n+k]-t[i*n+k]/sum_t) * (y[i*d+j]-y[k*d+j]) * t[i*n+k];
             }
             grad_cy[i*d+j] *= 4;
-            dy[i*d+j] = eta * grad_cy[i*d+j] + alpha * dy[i*d+j];
+            dy[i*d+j] = -eta * grad_cy[i*d+j] + alpha * dy[i*d+j];
             y[i*d+j] += dy[i*d+j];
         }
     }

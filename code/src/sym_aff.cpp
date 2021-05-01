@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <limits>
-#include "../include/tsne.h"
+#include "tsne.h"
 
 // define the maximum number of iterations to fit the perplexity
 int MAX_ITERATIONS = 1000;
@@ -16,7 +16,7 @@ void getPairwiseAffinity(float* squaredEuclidianDistances, int n, int perplexity
     float log_perp = log(perplexity);
 
     // compute affinities row by row
-    for (int i = 0; i < n*n; i += n) {
+    for (int i = 0; i < n; i++) {
         // initialize beta values
         float beta = 1.0;
         float beta_max = MAX_FLOAT;
