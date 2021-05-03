@@ -1,20 +1,21 @@
 #ifndef TSNE_H
+
 /**
- * \brief compute symmetric affinity
+ * \brief compute symmetric affinities
  * 
- * \param x: processed data read from file
- * \param n: row of x (number of data items)
- * \param d: col of x
+ * \param X: data points
+ * \param n_samples: number of data items (row of X)
+ * \param d_in: input dimensions (col of X)
  * \param perp: perplexity input
- * \param affinity: write back the return value here
+ * \param P: symmetric affinities
  */
-void getSymmetricAffinity(float* x, int n, int d, int perp, float* affinity);
+void getSymmetricAffinity(float* X, int n_samples, int d_in, int perp, float* P);
 
 
 /**
  * \brief use gradient descent to compute the result
  * 
- * \param affinity: symetric affinity
+ * \param affinity: symmetric affinities
  * \param n: number of data items
  * \param d: output dimention
  * \param y: result
@@ -29,6 +30,6 @@ void getLowDimResult(float* y, float* dy, float* grad_cy, float* p, float* t, in
  * @param D
  * @param DD
  */
-void getSquaredEuclideanDistances(float* X, int N, int D, float* DD);
+void getSquaredEuclideanDistances(float* X, int n_samples, int d_in, float* DD);
 
 #endif
