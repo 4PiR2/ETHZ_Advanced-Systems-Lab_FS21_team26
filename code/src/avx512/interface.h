@@ -5,6 +5,14 @@
 #include "pre.h"
 #include "gd.h"
 
+void readData(float *x, float *y, float *u, const std::string &filename, int seed, int n_samples, int d_in, int d_out) {
+	mat_clear(u, d_out, n_samples);
+	mat_clear_margin(y, d_out, n_samples);
+	mat_rand_norm(y, d_out, n_samples, 0.f, 1e-4f, true, seed);
+	mat_clear_margin(x, n_samples, d_in);
+	mat_load(x, n_samples, d_in, filename);
+}
+
 void getSymmetricAffinity(float *p, float *p_ex, float *x, float *temp_3n, float perplexity, float ex_rate,
                           int n_samples, int d_in) {
 	pre_pair_sq_dist(p, x, n_samples, d_in);
@@ -42,7 +50,7 @@ void run_test() {
 			u = mat_alloc<float>(d_out, n_samples),
 			temp_3n = mat_alloc<float>(3, n_samples);
 
-	mat_read_data(x, y, u, file_in, seed, n_samples, d_in, d_out);
+	readData(x, y, u, file_in, seed, n_samples, d_in, d_out);
 
 	getSymmetricAffinity(p, p_ex, x, temp_3n, perplexity, ex_rate, n_samples, d_in);
 

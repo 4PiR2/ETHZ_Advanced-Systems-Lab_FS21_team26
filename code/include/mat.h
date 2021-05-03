@@ -8,7 +8,7 @@
 #include <random>
 #include "immintrin.h"
 
-#define ALIGNMENT 512
+#define ALIGNMENT 32
 // ALIGNMENT: 512, 256, ..., sizeof(T) * 8
 
 #define GET_N(n, T) (((n) + (((ALIGNMENT) >> 3) / sizeof(T) - 1)) & (-1 ^ (((ALIGNMENT) >> 3) / sizeof(T) - 1)))
@@ -109,10 +109,9 @@ bool mat_store(T *p, int n, int m, const std::string &filename) {
 }
 
 template<typename T>
-void mat_read_data(T *x, T *y, T *u, const std::string &filename, int seed, int n_samples, int d_in, int d_out) {
-	mat_clear(u, d_out, n_samples);
+void mat_read_data(T *x, T *y, const std::string &filename, int seed, int n_samples, int d_in, int d_out) {
 	mat_clear_margin(y, d_out, n_samples);
-	mat_rand_norm(y, d_out, n_samples, 0.f, 1e-4f, true, seed);
+	mat_rand_norm(y, n_samples, d_out, 0.f, 1e-4f, true, seed);
 	mat_clear_margin(x, n_samples, d_in);
 	mat_load(x, n_samples, d_in, filename);
 }
