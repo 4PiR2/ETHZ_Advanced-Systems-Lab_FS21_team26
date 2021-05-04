@@ -4,11 +4,12 @@
 void gradientDescent(float* y, float* dy, float* grad_cy, float* p, float* t, float sum_t, int n, int d, int alpha, int eta) {
     for(int i=0; i<n; i++){
         for(int j=0; j<d; j++){
-            for(int k=0; i<n; i++){
+            for(int k=0; k<n; k++){
                 grad_cy[i*d+j] += (p[i*n+k]-t[i*n+k]/sum_t) * (y[i*d+j]-y[k*d+j]) * t[i*n+k];
             }
             grad_cy[i*d+j] *= 4;
             dy[i*d+j] = -eta * grad_cy[i*d+j] + alpha * dy[i*d+j];
+            grad_cy[i*d+j] = 0;
             y[i*d+j] += dy[i*d+j];
         }
     }
