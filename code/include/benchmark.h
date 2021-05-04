@@ -1,6 +1,6 @@
 #include "tsc_x86.h"
-#include <cstring>
-#include <cassert>
+#include <string.h>
+#include <assert.h>
 
 #ifndef BENCHMARK_H
 

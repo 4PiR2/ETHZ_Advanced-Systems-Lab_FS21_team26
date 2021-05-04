@@ -16,7 +16,7 @@ static void run_baseline(int n_samples, int d_out, int d_in, int rep, float eta,
 		
 		getSymmetricAffinity(x, n_samples, d_in, perplexity, p);
 
-		mat_store(p, n_samples, n_samples, "p_matrix.txt");
+		mat_store(p, n_samples, n_samples, "../output/p_matrix.txt");
 
 		getLowDimResult(y, dy, grad_cy, p, t, n_samples, d_out, alpha, eta, n_iter);
 		
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 
 	int rep = 1;
 
-	std::string file_in = "datasets/mnist/mnist_data_70kx784.txt", file_out = "output_matrix.txt";
+	std::string file_in = "../datasets/mnist/mnist_data_70kx784.txt", file_out = "../output/output_matrix.txt";
 
 	run_baseline(n_samples, d_out, d_in, rep, eta, alpha, perplexity, n_iter, file_in, file_out);
 
