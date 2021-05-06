@@ -46,5 +46,8 @@ clean:
 test_benchmark: test/test_benchmark.c
 	$(CC) $(CPPFLAGS) -o bin/test_benchmark test/test_benchmark.c && ./bin/test_benchmark
 
+test_sym_aff: test/test_sym_aff.c
+	$(CC) $(CPPFLAGS) -o bin/test_sym_aff test/test_sym_aff.c src/sym_aff.cpp && ./bin/test_sym_aff
+
 # -include $(OBJS:.o=.d)
 
