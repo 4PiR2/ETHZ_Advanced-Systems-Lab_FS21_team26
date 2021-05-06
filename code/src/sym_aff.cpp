@@ -9,7 +9,7 @@
 int MAX_ITERATIONS = 1000;
 
 // define the error tolerance for the perplexity
-float ERROR_TOLERANCE = 1e-5;
+float ERROR_TOLERANCE = 1e-7;
 
 float MIN_FLOAT = std::numeric_limits<float>::min();
 float MAX_FLOAT = std::numeric_limits<float>::max();
@@ -98,10 +98,13 @@ void getPairwiseAffinity(float* squaredEuclidianDistances, int n_samples, int pe
 			}
         }
 
+        sum--;
         // normalize the row
         for(int j = 0; j < n_samples; j++) {
             P[n_samples*i + j] /= sum;
+            P[n_samples*i + j] *= 4;
         }
+        P[n_samples*i + i] =0.f;
     }
 }
 
