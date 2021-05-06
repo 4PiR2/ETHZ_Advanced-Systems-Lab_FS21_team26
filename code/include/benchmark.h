@@ -3,9 +3,9 @@
 #include <assert.h>
 
 #ifndef BENCHMARK_H
-
+#define BENCHMARK_H
 #define MAXN_TIMERS 20
-#define MAX_TIMER_NAME_LEN 15
+#define MAX_TIMER_NAME_LEN 30
 
 typedef int thandle;
 
@@ -48,9 +48,9 @@ inline void stop(thandle th) {
 
 inline void benchmark_print() {
     printf("============ Print All Timers ============\n");
-    printf("%15s, %10s, %10s, %15s\n", "NAME", "REP", "TOTAL", "AVG");
+    printf("%30s, %10s, %20s\n", "NAME", "REP", "AVG");
     for (int i = 0; i < ntimers; i++) {
-        printf("%15s, %10d, %10lld, %15.4lf\n", timers[i].name, timers[i].rep, timers[i].accum, (double) timers[i].accum / timers[i].rep);
+        printf("%30s, %10d, %20.4lf\n", timers[i].name, timers[i].rep, (double) timers[i].accum / timers[i].rep);
     }
     printf("============ Print All Timers End ============\n\n");
 }
