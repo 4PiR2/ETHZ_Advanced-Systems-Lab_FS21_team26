@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "tsne.h"
 
-void gradientDescent(float* y, float* dy, float* grad_cy, float* p, float* t, float sum_t, int n, int d, int alpha, int eta) {
+void gradientDescent(float* y, float* dy, float* grad_cy, float* p, float* t, float sum_t, int n, int d, float alpha, float eta) {
     for(int i=0; i<n; i++){
         for(int j=0; j<d; j++){
             for(int k=0; k<n; k++){
@@ -38,7 +38,7 @@ float compute_sum_t(float* t, int n) {
     return sum_t;
 }
 
-void getLowDimResult(float* y, float* dy, float* grad_cy, float* p, float* t, int n_samples, int d_out, int alpha, int eta, int n_iter) {
+void getLowDimResult(float* y, float* dy, float* grad_cy, float* p, float* t, int n_samples, int d_out, float alpha, float eta, int n_iter) {
     for (int i = 0; i < n_iter; i++) {
 		compute_t(y, t, n_samples, d_out);
 		float sum_t = compute_sum_t(t, n_samples);
