@@ -6,40 +6,30 @@
 #include "tsne.h"
 
 // define the maximum number of iterations to fit the perplexity
-int MAX_ITERATIONS = 1000;
+int MAX_ITERATIONS = 200;
 
 // define the error tolerance for the perplexity
-float ERROR_TOLERANCE = 1e-7;
+float ERROR_TOLERANCE = 1e-5;
 
 float MIN_FLOAT = std::numeric_limits<float>::min();
 float MAX_FLOAT = std::numeric_limits<float>::max();
 
 // function declarations
-void getPairwiseAffinity(float* squaredEuclidianDistances, int n_samples, int perplexity, float* affinity);
+void getPairwiseAffinity(float* squaredEuclidianDistances, int n_samples, float perplexity, float* affinity);
 void normalizeData(float* X, int n_samples, int d_in);
 void addGaussianNoise(float* p, int n, int m, float mean, float std, bool use_seed, long unsigned int seed);
-void symmetrizeAffinities(float* P, int n_samples, int d_in);
+void symmetrizeAffinities(float* P, int n_samples);
 std::tuple<float, float, float> updateBetaValues(float entropy_error, float beta_min, float beta_max, float beta);
 
 
-void getSymmetricAffinity(float* X, int n_samples, int d_in, int perp, float* P) {
-    float* squaredEuclidianDistances = (float*) malloc(n_samples * n_samples * sizeof(float));
-
+void getSymmetricAffinity(float* X, int n_samples, int d_in, float perp, float* P, float* squaredEuclidianDistances) {
     //normalizeData(x, n, d);
-    //addGaussianNoise(x, n, d, 0.f, 10.f, true, 13);
-
-    if (squaredEuclidianDistances == NULL) {
-        printf("Memory allocation failed!\n");
-        exit(1);
-    }
 	getSquaredEuclideanDistances(X, n_samples, d_in, squaredEuclidianDistances);
 
     // compute pairwise affinities
     getPairwiseAffinity(squaredEuclidianDistances, n_samples, perp, P);
 
-    free(squaredEuclidianDistances);
-
-    symmetrizeAffinities(P, n_samples, d_in);
+    symmetrizeAffinities(P, n_samples);
 }
 
 
@@ -61,8 +51,8 @@ void getSquaredEuclideanDistances(float* X, int n_samples, int dim, float* DD) {
 }
 
 
-void getPairwiseAffinity(float* squaredEuclidianDistances, int n_samples, int perplexity, float* P) {
-    float log_perp = log(perplexity);
+void getPairwiseAffinity(float* squaredEuclidianDistances, int n_samples, float perplexity, float* P) {
+    float log_perp = logf(perplexity);
 
     // compute affinities row by row
     for (int i = 0; i < n_samples; i++) {
@@ -78,17 +68,18 @@ void getPairwiseAffinity(float* squaredEuclidianDistances, int n_samples, int pe
             // compute the conditional Gaussian densities for point i
             sum = 0.0;
 			for(int j = 0; j < n_samples; j++) {
-                float gaussian_density = exp(-beta * squaredEuclidianDistances[n_samples*i + j]);
+                float gaussian_density = expf(-beta * squaredEuclidianDistances[n_samples*i + j]);
 			    P[n_samples*i + j] = gaussian_density;
-                sum += gaussian_density;
+                // if (i != j)
+                    sum += gaussian_density;
 			}
 
 			float shannon_entropy = 0.0;
 			for (int j = 0; j < n_samples; j++) shannon_entropy += beta * (squaredEuclidianDistances[n_samples*i + j] * P[n_samples*i + j]);
-			shannon_entropy = (shannon_entropy / sum) + log(sum);
+			shannon_entropy = (shannon_entropy / sum) + logf(sum);
 
 			float entropy_error = shannon_entropy - log_perp;
-			if (abs(entropy_error) < ERROR_TOLERANCE) {
+			if (fabs(entropy_error) < ERROR_TOLERANCE) {
                 break;
 			} else {
                 auto betaValues = updateBetaValues(entropy_error, beta_min, beta_max, beta);
@@ -102,14 +93,14 @@ void getPairwiseAffinity(float* squaredEuclidianDistances, int n_samples, int pe
         // normalize the row
         for(int j = 0; j < n_samples; j++) {
             P[n_samples*i + j] /= sum;
-            P[n_samples*i + j] *= 4;
+            P[n_samples*i + j] *= 4.f;
         }
         P[n_samples*i + i] =0.f;
     }
 }
 
 
-void symmetrizeAffinities(float* P, int n_samples, int d_in) {
+void symmetrizeAffinities(float* P, int n_samples) {
     for(int i = 0; i < n_samples; i++) {
         int mN = (i + 1) * n_samples;
         for(int j = i + 1; j < n_samples; j++) {
@@ -188,15 +179,4 @@ void normalizeData(float* X, int n_samples, int d_in) {
             X[i*n_samples + j] = X[i*n_samples + j] / var[j];
         }
     }
-}
-
-void addGaussianNoise(float* X, int n, int m, float mean, float std, bool use_seed, long unsigned int seed) {
-	std::random_device rd;
-	std::mt19937 gen0{rd()}, gen1{seed};
-	std::normal_distribution<float> d(mean, std);
-	for (int i = 0; i < n; ++i) {
-		for (int j = 0; j < m; ++j) {
-			X[i*n + j] += d(use_seed ? gen1 : gen0);
-		}
-	}
 }

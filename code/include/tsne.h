@@ -8,8 +8,9 @@
  * \param d_in: input dimensions (col of X)
  * \param perp: perplexity input
  * \param P: symmetric affinities
+ * \param squaredEuclideanDistances: Uninitialized Euclidean Distances Matrix
  */
-void getSymmetricAffinity(float* X, int n_samples, int d_in, int perp, float* P);
+void getSymmetricAffinity(float* X, int n_samples, int d_in, float perp, float* P, float* squaredEuclideanDistances);
 
 
 /**
@@ -20,7 +21,7 @@ void getSymmetricAffinity(float* X, int n_samples, int d_in, int perp, float* P)
  * \param d: output dimention
  * \param y: result
  */
-void getLowDimResult(float* y, float* dy, float* grad_cy, float* p, float* t, int n, int d, int alpha, int eta, int n_iter);
+void getLowDimResult(float* y, float* dy, float* grad_cy, float* p, float* t, int n, int d, float alpha, float eta, int n_iter);
 
 /**
  * \brief compute squared euclidean distance
