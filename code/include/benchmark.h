@@ -27,7 +27,18 @@ extern char timers_to_show[][MAX_TIMER_NAME_LEN];
 extern int n_timers_to_compare;
 extern char timers_to_compare[][2][MAX_TIMER_NAME_LEN];
 
+static thandle get_timer(const char* name) {
+    for (int i = 0; i < ntimers; i++) 
+        if (strcmp(name, timers[i].name) == 0)
+            return i;
+    return -1;
+}
+
 inline thandle create_timer(const char* name) {
+    thandle th = get_timer(name);
+    if (th != -1) {
+        return th;
+    }
     timers[ntimers].rep = 0;
     timers[ntimers].timing = false;
     timers[ntimers].accum = 0;
@@ -58,9 +69,10 @@ static bool if_show(char* name) {
 }
 
 static double get_duration(char* name) {
-    for (int i = 0; i < ntimers; i++) 
-        if (strcmp(name, timers[i].name) == 0)
-            return (double) timers[i].accum / timers[i].rep;
+    thandle th = get_timer(name);
+    if (th != -1) {
+        return (double) timers[th].accum / timers[th].rep;
+    }
     return -1;
 }
 

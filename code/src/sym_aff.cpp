@@ -37,9 +37,27 @@ void getSymmetricAffinity(float* X, int n_samples, int d_in, float perp, float* 
     baselineCompare(ED, _ED, n_samples * n_samples, "ED baseline compare");
 
     // compute pairwise affinities
+    t1 = create_timer("PA"), t2 = create_timer("_PA");
+    start(t1);
     getPairwiseAffinity(ED, n_samples, perp, P);
-
+    stop(t1);
+    // baseline
+    float* _P = mat_alloc<float>(n_samples, n_samples);
+    start(t2);
+    _getPairwiseAffinity(ED, n_samples, perp, _P);
+    stop(t2);
+    baselineCompare(P, _P, n_samples * n_samples, "PA baseline compare");
+    
+    t1 = create_timer("SA"), t2 = create_timer("_SA");
+    start(t1);
     symmetrizeAffinities(P, n_samples);
+    stop(t1);
+    // baseline
+    start(t2);
+    symmetrizeAffinities(_P, n_samples);
+    stop(t2);
+    baselineCompare(P, _P, n_samples * n_samples, "SA baseline compare");
+    
 }
 
 
@@ -109,6 +127,24 @@ void getPairwiseAffinity(float* squaredEuclidianDistances, int n_samples, float 
     }
 }
 
+std::tuple<float, float, float> updateBetaValues(float entropy_error, float beta_min, float beta_max, float beta) {
+    if(entropy_error > 0) {
+        beta_min = beta;
+        if(abs(beta_max) == MAX_FLOAT)
+            beta *= 2.0;
+        else
+            beta = (beta + beta_max) / 2.0;
+    }
+    else {
+        beta_max = beta;
+        if(abs(beta_min) == MIN_FLOAT)
+            beta /= 2.0;
+        else
+            beta = (beta + beta_min) / 2.0;
+    }
+
+    return std::make_tuple(beta_min, beta_max, beta);
+}
 
 void symmetrizeAffinities(float* P, int n_samples) {
     for(int i = 0; i < n_samples; i++) {
@@ -128,26 +164,6 @@ void symmetrizeAffinities(float* P, int n_samples) {
     for(int i = 0; i < n_samples * n_samples; i++) {
         P[i] /= sum_P;
     }
-}
-
-
-std::tuple<float, float, float> updateBetaValues(float entropy_error, float beta_min, float beta_max, float beta) {
-    if(entropy_error > 0) {
-        beta_min = beta;
-        if(abs(beta_max) == MAX_FLOAT)
-            beta *= 2.0;
-        else
-            beta = (beta + beta_max) / 2.0;
-    }
-    else {
-        beta_max = beta;
-        if(abs(beta_min) == MIN_FLOAT)
-            beta /= 2.0;
-        else
-            beta = (beta + beta_min) / 2.0;
-    }
-
-    return std::make_tuple(beta_min, beta_max, beta);
 }
 
 /**

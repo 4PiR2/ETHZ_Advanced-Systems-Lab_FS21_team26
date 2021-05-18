@@ -5,21 +5,26 @@
 int ntimers = 0;
 struct timer timers[MAXN_TIMERS];
 
-int n_timers_to_show = 4;
+// TODO: very ugly hard coding here
 char timers_to_show[][MAX_TIMER_NAME_LEN] = {
-	"SA", 
-	"GD", 
+	"SymAff", 
+	"GradDesc", 
 	"ED",
-	"_ED",
+	"PA",
+	"SA",
+	"_SA",
 };
+int n_timers_to_show = sizeof(timers_to_show) / MAX_TIMER_NAME_LEN;
 // first: current, second: baseline
-int n_timers_to_compare = 1;
 char timers_to_compare[][2][MAX_TIMER_NAME_LEN] = {
-	{"ED", "_ED"}
+	{"ED", "_ED"},
+	{"PA", "_PA"},
+	{"SA", "_SA"},
 };
+int n_timers_to_compare = sizeof(timers_to_compare) / (2 * MAX_TIMER_NAME_LEN);
 
 static void run_baseline(int n_samples, int d_out, int d_in, int rep, float eta, float alpha, float perplexity, int n_iter, std::string file_in, std::string file_out) {
-	thandle t1 = create_timer("SA"), t2 = create_timer("GD");
+	thandle t1 = create_timer("SymAff"), t2 = create_timer("GradDesc");
 	for (int r = 0; r < rep; r++) {
 		printf("Rep %d starting...\n", r + 1);
 		auto x = mat_alloc<float>(n_samples, d_in),
@@ -53,7 +58,7 @@ int main(int argc, char *argv[]) {
 	int n_samples = 900, d_in = 784, d_out = 2, n_iter = 1000 /*,n_iter_ex = 250*/ /*,seed = 0*/;
 	float perplexity = 50.f /*,ex_rate = 12.f*/, eta = 50.f, alpha = .8f/*,alpha_ex = .5f*/;
 
-	int rep = 1;
+	int rep = 2;
 
 	std::string file_in = "../datasets/mnist/mnist_data_70kx784.txt", file_out = "../output/output_matrix.txt";
 
