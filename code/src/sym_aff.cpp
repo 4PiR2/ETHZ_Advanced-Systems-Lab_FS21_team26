@@ -23,15 +23,21 @@ void symmetrizeAffinities(float* P, int n_samples);
 std::tuple<float, float, float> updateBetaValues(float entropy_error, float beta_min, float beta_max, float beta);
 
 
-void getSymmetricAffinity(float* X, int n_samples, int d_in, float perp, float* P, float* squaredEuclidianDistances) {
+void getSymmetricAffinity(float* X, int n_samples, int d_in, float perp, float* P, float* ED) {
     //normalizeData(x, n, d);
-    thandle t1 = create_timer("ed");
+    thandle t1 = create_timer("ED"), t2 = create_timer("_ED");
     start(t1);
-	getSquaredEuclideanDistances(X, n_samples, d_in, squaredEuclidianDistances);
+	getSquaredEuclideanDistances(X, n_samples, d_in, ED);
     stop(t1);
-    _getSquaredEuclideanDistances(X, n_samples, d_in, squaredEuclidianDistances);
+    // baseline
+    float* _ED = mat_alloc<float>(n_samples, n_samples);
+    start(t2);
+    _getSquaredEuclideanDistances(X, n_samples, d_in, _ED);
+    stop(t2);
+    baselineCompare(ED, _ED, n_samples * n_samples, "ED baseline compare");
+
     // compute pairwise affinities
-    getPairwiseAffinity(squaredEuclidianDistances, n_samples, perp, P);
+    getPairwiseAffinity(ED, n_samples, perp, P);
 
     symmetrizeAffinities(P, n_samples);
 }
@@ -65,7 +71,7 @@ void getPairwiseAffinity(float* squaredEuclidianDistances, int n_samples, float 
         float beta_max = MAX_FLOAT;
         float beta_min = MIN_FLOAT;
 
-        float sum;
+        float sum = 0.0;
         // perform binary search to find the optimal beta values for each data point
         for (int k = 0; k < MAX_ITERATIONS; ++k) {
 

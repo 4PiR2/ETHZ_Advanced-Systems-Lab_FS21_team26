@@ -13,7 +13,7 @@
 
 #define GET_N(n, T) (((n) + (((ALIGNMENT) >> 3) / sizeof(T) - 1)) & (-1 ^ (((ALIGNMENT) >> 3) / sizeof(T) - 1)))
 
-template<typename T>
+template<typename T> inline
 T *mat_alloc(int n, int m) {
 	void *p = _mm_malloc(GET_N(n, T) * GET_N(m, T) * sizeof(T), 4096);
 	if (!p)
@@ -21,11 +21,12 @@ T *mat_alloc(int n, int m) {
 	return (T *) p;
 }
 
-template<typename T>
+template<typename T> inline
 void mat_free(T *p) {
 	_mm_free(p);
 }
 
+inline
 void mat_free_batch(int num...) {
 	va_list ap;
 	va_start(ap, num);
@@ -34,12 +35,12 @@ void mat_free_batch(int num...) {
 	va_end(ap);
 }
 
-template<typename T>
+template<typename T> inline
 void mat_clear(T *p, int n, int m) {
 	memset(p, 0, GET_N(n, T) * GET_N(m, T) * sizeof(T));
 }
 
-template<typename T>
+template<typename T> inline
 void mat_clear_margin(T *p, int n, int m) {
 	int N = GET_N(n, T), M = GET_N(m, T), M_m_s = (M - m) * sizeof(T);
 	for (int i = 0, iMm = m; i < n; ++i, iMm += M) {
@@ -48,7 +49,7 @@ void mat_clear_margin(T *p, int n, int m) {
 	memset(p + n * M, 0, (N - n) * M * sizeof(T));
 }
 
-template<typename T>
+template<typename T> inline
 void mat_transpose(T *pt, T *p, int n, int m) {
 	int N = GET_N(n, T), M = GET_N(m, T);
 	for (int j = 0, jN = 0; j < m; ++j, jN += N) {
@@ -58,7 +59,7 @@ void mat_transpose(T *pt, T *p, int n, int m) {
 	}
 }
 
-template<typename T>
+template<typename T> inline
 void mat_rand_norm(T *p, int n, int m, T mean, T std, bool use_seed, long unsigned int seed) {
 	int M = GET_N(m, T);
 	std::random_device rd;
@@ -71,7 +72,7 @@ void mat_rand_norm(T *p, int n, int m, T mean, T std, bool use_seed, long unsign
 	}
 }
 
-template<typename T>
+template<typename T> inline
 bool mat_load(T *p, int n, int m, const std::string &filename) {
 	std::ifstream f(filename);
 	if (!f.is_open()) {
@@ -90,7 +91,7 @@ bool mat_load(T *p, int n, int m, const std::string &filename) {
 	return true;
 }
 
-template<typename T>
+template<typename T> inline
 bool mat_store(T *p, int n, int m, const std::string &filename) {
 	std::ofstream f(filename);
 	if (!f.is_open()) {
@@ -108,7 +109,7 @@ bool mat_store(T *p, int n, int m, const std::string &filename) {
 	return true;
 }
 
-template<typename T>
+template<typename T> inline
 void mat_read_data(T *x, T *y, const std::string &filename, int seed, int n_samples, int d_in, int d_out) {
 	mat_clear_margin(y, d_out, n_samples);
 	mat_rand_norm(y, n_samples, d_out, 0.f, 1e-4f, true, seed);

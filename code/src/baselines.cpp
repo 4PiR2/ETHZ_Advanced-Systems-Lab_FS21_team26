@@ -8,15 +8,16 @@
 #define eps_baselines 1e-7
 // C is the assertion message
 #define assertEq(A,B,C) assert(fabs(A - B) <= eps_baselines && C) 
-/*
-    the output of the original function is stored in DD argument
-    we need to re-generate the whole array and make comparisons
 
-    DD has a size of n_samples * n_samples
-*/
-void _getSquaredEuclideanDistances(const float* X, int n_samples, int dim, float* DD_output) {
+void baselineCompare(const float* X, const float* Y, const int size, char* msg) {
 #ifdef DEBUG
-    float* DD = mat_alloc_float(n_samples, n_samples);
+    for (int i = 0; i < size; i++)
+        assertEq(X[i], Y[i], msg);
+#endif
+}
+
+void _getSquaredEuclideanDistances(const float* X, int n_samples, int dim, float* DD) {
+#ifdef DEBUG
     const float* XnD = X;
     for(int n = 0; n < n_samples; ++n, XnD += dim) {
         const float* XmD = XnD + dim;
@@ -31,14 +32,5 @@ void _getSquaredEuclideanDistances(const float* X, int n_samples, int dim, float
             *curr_elem_sym = *curr_elem;
         }
     }
-
-    for (int i = 0; i < n_samples; i++) {
-        for (int j = 0; j < n_samples; j++) {
-            int idx = i * n_samples + j;
-            assertEq(DD[idx], DD_output[idx], "ED TEST FAILS");
-        }
-    }
-
-    mat_free_float(DD);
 #endif
 }
