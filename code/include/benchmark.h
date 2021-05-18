@@ -39,6 +39,7 @@ inline thandle create_timer(const char* name) {
     if (th != -1) {
         return th;
     }
+    printf("Creating Timer: %s\n", name);
     timers[ntimers].rep = 0;
     timers[ntimers].timing = false;
     timers[ntimers].accum = 0;

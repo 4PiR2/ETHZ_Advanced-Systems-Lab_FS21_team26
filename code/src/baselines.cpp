@@ -1,19 +1,26 @@
 #include <assert.h>
 #include <tuple>
+#include <math.h>
+#include <limits>
 
 #include "baselines.h"
 #include "math.h"
 
 #define DEBUG
 
-#define eps_baselines 1e-7
+#define eps_baselines 1e-5
 // C is the assertion message
-#define assertEq(A,B,C) assert(fabs(A - B) <= eps_baselines && C) 
+#define assertEq(A,B) assert(fabs((A - B) / (A + 1e-7)) <= eps_baselines) 
+// #define assertEq(A,B) assert(fabs((A - B)) <= eps_baselines) 
 
-void baselineCompare(const float* X, const float* Y, const int size, const char* msg) {
+void baselineCompare(const float* X, const float* Y, const int size) {
 #ifdef DEBUG
-    for (int i = 0; i < size; i++)
-        assertEq(X[i], Y[i], msg);
+    for (int i = 0; i < size; i++) {
+        // if (!(fabs(X[i] - Y[i]) <= eps_baselines)) {
+        if (!(fabs((X[i] - Y[i]) / (X[i] + 1e-7)) <= eps_baselines)) {
+            printf("Assertion Failed: %f %f\n", X[i], Y[i]);
+        }      
+    }
 #endif
 }
 
@@ -33,6 +40,18 @@ void _getSquaredEuclideanDistances(const float* X, int n_samples, int dim, float
             *curr_elem_sym = *curr_elem;
         }
     }
+
+    // for (int i = 0; i < n_samples; i++) {
+    //     for (int j = i + 1; j < n_samples; j++) {
+    //         float tmp = 0.0;
+    //         for (int k = 0; k < dim; k++) {
+    //             float sq = X[i * dim + k] - X[j * dim + k];
+    //             tmp += sq * sq;
+    //         }
+    //         DD[i * n_samples + j] = DD[j * n_samples + i] = tmp;
+    //     }
+    //     DD[i * n_samples + i] = 0.0;
+    // }
 #endif
 }
 
@@ -45,32 +64,19 @@ extern float ERROR_TOLERANCE;// = 1e-5;
 extern float MIN_FLOAT;// = std::numeric_limits<float>::min();
 extern float MAX_FLOAT;//  = std::numeric_limits<float>::max();
 
-static std::tuple<float, float, float> updateBetaValues(float entropy_error, float beta_min, float beta_max, float beta) {
-    if(entropy_error > 0) {
-        beta_min = beta;
-        if(abs(beta_max) == MAX_FLOAT)
-            beta *= 2.0;
-        else
-            beta = (beta + beta_max) / 2.0;
-    }
-    else {
-        beta_max = beta;
-        if(abs(beta_min) == MIN_FLOAT)
-            beta /= 2.0;
-        else
-            beta = (beta + beta_min) / 2.0;
-    }
-
-    return std::make_tuple(beta_min, beta_max, beta);
-}
-
 void _getPairwiseAffinity(const float* squaredEuclidianDistances, int n_samples, float perplexity, float* P) {
     float log_perp = logf(perplexity);
 
     // compute affinities row by row
     for (int i = 0; i < n_samples; i++) {
-        // initialize beta values, beta := -.5f / (sigma * sigma)
-        float beta = 1.0;
+        float maxv = 0.0;
+        for (int j = 0; j < n_samples; j++) {
+            float a = squaredEuclidianDistances[i * n_samples + j];
+            if (a > maxv) maxv = a;
+        }
+            
+        // initialize beta values, beta := .5f / (sigma * sigma)
+        float beta = 1.0 / maxv;
         float beta_max = MAX_FLOAT;
         float beta_min = MIN_FLOAT;
 
@@ -83,26 +89,36 @@ void _getPairwiseAffinity(const float* squaredEuclidianDistances, int n_samples,
 			for(int j = 0; j < n_samples; j++) {
                 float gaussian_density = expf(-beta * squaredEuclidianDistances[n_samples*i + j]);
 			    P[n_samples*i + j] = gaussian_density;
-                // if (i != j)
+                if (i != j)
                     sum += gaussian_density;
 			}
 
 			float shannon_entropy = 0.0;
-			for (int j = 0; j < n_samples; j++) shannon_entropy += beta * (squaredEuclidianDistances[n_samples*i + j] * P[n_samples*i + j]);
+			for (int j = 0; j < n_samples; j++) 
+                shannon_entropy += beta * (squaredEuclidianDistances[n_samples*i + j] * P[n_samples*i + j]);
 			shannon_entropy = (shannon_entropy / sum) + logf(sum);
 
 			float entropy_error = shannon_entropy - log_perp;
 			if (fabs(entropy_error) < ERROR_TOLERANCE) {
                 break;
 			} else {
-                auto betaValues = updateBetaValues(entropy_error, beta_min, beta_max, beta);
-                beta_min = std::get<0>(betaValues);
-                beta_max = std::get<1>(betaValues);
-                beta = std::get<2>(betaValues);
+                if(entropy_error > 0) {
+                    beta_min = beta;
+                    if(abs(beta_max) == MAX_FLOAT)
+                        beta *= 2.0;
+                    else
+                        beta = (beta + beta_max) / 2.0;
+                }
+                else {
+                    beta_max = beta;
+                    if(abs(beta_min) == MIN_FLOAT)
+                        beta /= 2.0;
+                    else
+                        beta = (beta + beta_min) / 2.0;
+                }
 			}
         }
-
-        sum--;
+        
         // normalize the row
         for(int j = 0; j < n_samples; j++) {
             P[n_samples*i + j] /= sum;

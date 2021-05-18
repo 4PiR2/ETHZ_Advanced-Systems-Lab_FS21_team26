@@ -24,7 +24,8 @@ std::tuple<float, float, float> updateBetaValues(float entropy_error, float beta
 
 
 void getSymmetricAffinity(float* X, int n_samples, int d_in, float perp, float* P, float* ED) {
-    //normalizeData(x, n, d);
+    normalizeData(X, n_samples, d_in);
+
     thandle t1 = create_timer("ED"), t2 = create_timer("_ED");
     start(t1);
 	getSquaredEuclideanDistances(X, n_samples, d_in, ED);
@@ -34,7 +35,7 @@ void getSymmetricAffinity(float* X, int n_samples, int d_in, float perp, float* 
     start(t2);
     _getSquaredEuclideanDistances(X, n_samples, d_in, _ED);
     stop(t2);
-    baselineCompare(ED, _ED, n_samples * n_samples, "ED baseline compare");
+    baselineCompare(ED, _ED, n_samples * n_samples);
 
     // compute pairwise affinities
     t1 = create_timer("PA"), t2 = create_timer("_PA");
@@ -46,7 +47,7 @@ void getSymmetricAffinity(float* X, int n_samples, int d_in, float perp, float* 
     start(t2);
     _getPairwiseAffinity(ED, n_samples, perp, _P);
     stop(t2);
-    baselineCompare(P, _P, n_samples * n_samples, "PA baseline compare");
+    baselineCompare(P, _P, n_samples * n_samples);
     
     t1 = create_timer("SA"), t2 = create_timer("_SA");
     start(t1);
@@ -56,7 +57,7 @@ void getSymmetricAffinity(float* X, int n_samples, int d_in, float perp, float* 
     start(t2);
     symmetrizeAffinities(_P, n_samples);
     stop(t2);
-    baselineCompare(P, _P, n_samples * n_samples, "SA baseline compare");
+    baselineCompare(P, _P, n_samples * n_samples);
     
 }
 
@@ -158,8 +159,13 @@ void getPairwiseAffinity(float* squaredEuclidianDistances, int n_samples, float 
 
     // compute affinities row by row
     for (int i = 0; i < n_samples; i++) {
-        // initialize beta values, beta := -.5f / (sigma * sigma)
-        float beta = 1.0;
+        float maxv = 1.0;
+        for (int j = 0; j < n_samples; j++) {
+            float a = squaredEuclidianDistances[i * n_samples + j];
+            if (a > maxv) maxv = a;
+        }
+        // initialize beta values, beta := .5f / (sigma * sigma)
+        float beta = 1.0 / maxv;
         float beta_max = MAX_FLOAT;
         float beta_min = MIN_FLOAT;
 
@@ -172,26 +178,36 @@ void getPairwiseAffinity(float* squaredEuclidianDistances, int n_samples, float 
 			for(int j = 0; j < n_samples; j++) {
                 float gaussian_density = expf(-beta * squaredEuclidianDistances[n_samples*i + j]);
 			    P[n_samples*i + j] = gaussian_density;
-                // if (i != j)
+                if (i != j)
                     sum += gaussian_density;
 			}
 
 			float shannon_entropy = 0.0;
-			for (int j = 0; j < n_samples; j++) shannon_entropy += beta * (squaredEuclidianDistances[n_samples*i + j] * P[n_samples*i + j]);
+			for (int j = 0; j < n_samples; j++) 
+                shannon_entropy += beta * (squaredEuclidianDistances[n_samples*i + j] * P[n_samples*i + j]);
 			shannon_entropy = (shannon_entropy / sum) + logf(sum);
 
 			float entropy_error = shannon_entropy - log_perp;
 			if (fabs(entropy_error) < ERROR_TOLERANCE) {
                 break;
 			} else {
-                auto betaValues = updateBetaValues(entropy_error, beta_min, beta_max, beta);
-                beta_min = std::get<0>(betaValues);
-                beta_max = std::get<1>(betaValues);
-                beta = std::get<2>(betaValues);
+                if(entropy_error > 0) {
+                    beta_min = beta;
+                    if(abs(beta_max) == MAX_FLOAT)
+                        beta *= 2.f;
+                    else
+                        beta = (beta + beta_max) / 2.f;
+                }
+                else {
+                    beta_max = beta;
+                    if(abs(beta_min) == MIN_FLOAT)
+                        beta /= 2.f;
+                    else
+                        beta = (beta + beta_min) / 2.f;
+                }
 			}
         }
 
-        sum--;
         // normalize the row
         for(int j = 0; j < n_samples; j++) {
             P[n_samples*i + j] /= sum;
@@ -199,25 +215,6 @@ void getPairwiseAffinity(float* squaredEuclidianDistances, int n_samples, float 
         }
         P[n_samples*i + i] =0.f;
     }
-}
-
-std::tuple<float, float, float> updateBetaValues(float entropy_error, float beta_min, float beta_max, float beta) {
-    if(entropy_error > 0) {
-        beta_min = beta;
-        if(abs(beta_max) == MAX_FLOAT)
-            beta *= 2.0;
-        else
-            beta = (beta + beta_max) / 2.0;
-    }
-    else {
-        beta_max = beta;
-        if(abs(beta_min) == MIN_FLOAT)
-            beta /= 2.0;
-        else
-            beta = (beta + beta_min) / 2.0;
-    }
-
-    return std::make_tuple(beta_min, beta_max, beta);
 }
 
 void symmetrizeAffinities(float* P, int n_samples) {
@@ -249,12 +246,14 @@ void symmetrizeAffinities(float* P, int n_samples) {
  * @retval None
  */
 void normalizeData(float* X, int n_samples, int d_in) {
+    // TODO: It seems that using stdvar to normalize isn't enough
+    // Currently using maxv, could have a discussion
     float* mean = (float*) calloc(d_in, sizeof(float));
     float* var = (float*) calloc(d_in, sizeof(float));
 
     for (int i = 0; i < n_samples; i++) {
         for (int j = 0; j < d_in; j++) {
-            mean[j] +=  X[i*n_samples + j];
+            mean[j] +=  X[i*d_in + j];
         }
     }
 
@@ -262,21 +261,24 @@ void normalizeData(float* X, int n_samples, int d_in) {
         mean[k] /= n_samples;
     }
 
+    float maxv = 0.0;
     for (int i = 0; i < n_samples; i++) {
         for (int j = 0; j < d_in; j++) {
-            float diff =  X[i*n_samples + j] - mean[j];
-            X[i*n_samples + j] = diff * diff;
-            var[j] += diff;
+            float diff =  X[i*d_in + j] - mean[j];
+            X[i*d_in + j] = diff;
+            // var[j] += diff * diff;
+            if (fabs(diff) > maxv)
+                maxv = fabs(diff);
         }
     }
 
     for (int k = 0; k < d_in; k++) {
         var[k] = sqrt(var[k] / n_samples);
     }
-    
     for (int i = 0; i < n_samples; i++) {
         for (int j = 0; j < d_in; j++) {
-            X[i*n_samples + j] = X[i*n_samples + j] / var[j];
+            // TODO: IS 1e-7 an appropriate eps
+            X[i*d_in + j] = X[i*d_in + j] / maxv;
         }
     }
 }

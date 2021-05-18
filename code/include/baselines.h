@@ -8,5 +8,5 @@ void _getPairwiseAffinity(const float* ED, int n_samples, float perp, float* P);
 void _normalizeData(float* X, int n_samples, int d_in);
 void _symmetrizeAffinities(float* P, int n_samples);
 void _getSquaredEuclideanDistances(const float* X, int n_samples, int dim, float* DD);
-void baselineCompare(const float* X, const float* Y, int size, const char* msg);
+void baselineCompare(const float* X, const float* Y, int size);
 #endif
