@@ -10,16 +10,17 @@ char timers_to_show[][MAX_TIMER_NAME_LEN] = {
 	"SymAff", 
 	"GradDesc", 
 	"ED",
-	"PA",
-	"SA",
-	"_SA",
+	"_ED",
+	// "PA",
+	// "SA",
+	// "_SA",
 };
 int n_timers_to_show = sizeof(timers_to_show) / MAX_TIMER_NAME_LEN;
 // first: current, second: baseline
 char timers_to_compare[][2][MAX_TIMER_NAME_LEN] = {
 	{"ED", "_ED"},
-	{"PA", "_PA"},
-	{"SA", "_SA"},
+	// {"PA", "_PA"},
+	// {"SA", "_SA"},
 };
 int n_timers_to_compare = sizeof(timers_to_compare) / (2 * MAX_TIMER_NAME_LEN);
 
