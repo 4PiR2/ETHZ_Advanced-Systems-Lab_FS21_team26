@@ -26,10 +26,10 @@ void getLowDimResult(float* y, float* dy, float* grad_cy, float* p, float* t, in
 /**
  * \brief compute squared euclidean distance
  *
- * @param X
- * @param N
- * @param D
- * @param DD
+ * @param X: data point
+ * @param N: n_samples
+ * @param D: input dimension
+ * @param DD: output of Euclidean Distances
  */
 void getSquaredEuclideanDistances(float* X, int n_samples, int d_in, float* DD);
 

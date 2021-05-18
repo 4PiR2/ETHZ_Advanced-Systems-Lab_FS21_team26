@@ -4,6 +4,7 @@
 #include <tuple>
 #include <limits>
 #include "tsne.h"
+#include "baselines.h"
 
 // define the maximum number of iterations to fit the perplexity
 int MAX_ITERATIONS = 200;
@@ -17,7 +18,6 @@ float MAX_FLOAT = std::numeric_limits<float>::max();
 // function declarations
 void getPairwiseAffinity(float* squaredEuclidianDistances, int n_samples, float perplexity, float* affinity);
 void normalizeData(float* X, int n_samples, int d_in);
-void addGaussianNoise(float* p, int n, int m, float mean, float std, bool use_seed, long unsigned int seed);
 void symmetrizeAffinities(float* P, int n_samples);
 std::tuple<float, float, float> updateBetaValues(float entropy_error, float beta_min, float beta_max, float beta);
 
@@ -25,7 +25,7 @@ std::tuple<float, float, float> updateBetaValues(float entropy_error, float beta
 void getSymmetricAffinity(float* X, int n_samples, int d_in, float perp, float* P, float* squaredEuclidianDistances) {
     //normalizeData(x, n, d);
 	getSquaredEuclideanDistances(X, n_samples, d_in, squaredEuclidianDistances);
-
+    _getSquaredEuclideanDistances(X, n_samples, d_in, squaredEuclidianDistances);
     // compute pairwise affinities
     getPairwiseAffinity(squaredEuclidianDistances, n_samples, perp, P);
 

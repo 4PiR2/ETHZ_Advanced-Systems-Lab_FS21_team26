@@ -22,12 +22,6 @@ int ntimers = 0;
 struct timer timers[MAXN_TIMERS];
 
 inline thandle create_timer(const char* name) {
-    // timers[ntimers] = {
-    //     .rep = 0,
-    //     .timing = false,
-    //     .accum = 0,
-    //     .st = 0
-    // };
     timers[ntimers].rep = 0;
     timers[ntimers].timing = false;
     timers[ntimers].accum = 0;
