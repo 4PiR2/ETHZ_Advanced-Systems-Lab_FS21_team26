@@ -1,13 +1,11 @@
 #include "tsne.h"
 #include "mat.h"
-#include <benchmark.h>
+#include "benchmark.h"
+
+int ntimers = 0;
+struct timer timers[MAXN_TIMERS];
 
 static void run_baseline(int n_samples, int d_out, int d_in, int rep, float eta, float alpha, float perplexity, int n_iter, std::string file_in, std::string file_out) {
-
-
-
-	
-
 	thandle t1 = create_timer("SymmetricAffinity"), t2 = create_timer("GradientDescent");
 	for (int r = 0; r < rep; r++) {
 		printf("Rep %d starting...\n", r + 1);

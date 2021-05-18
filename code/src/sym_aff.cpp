@@ -5,6 +5,7 @@
 #include <limits>
 #include "tsne.h"
 #include "baselines.h"
+#include "benchmark.h"
 
 // define the maximum number of iterations to fit the perplexity
 int MAX_ITERATIONS = 200;
@@ -24,7 +25,10 @@ std::tuple<float, float, float> updateBetaValues(float entropy_error, float beta
 
 void getSymmetricAffinity(float* X, int n_samples, int d_in, float perp, float* P, float* squaredEuclidianDistances) {
     //normalizeData(x, n, d);
+    thandle t1 = create_timer("ed");
+    start(t1);
 	getSquaredEuclideanDistances(X, n_samples, d_in, squaredEuclidianDistances);
+    stop(t1);
     _getSquaredEuclideanDistances(X, n_samples, d_in, squaredEuclidianDistances);
     // compute pairwise affinities
     getPairwiseAffinity(squaredEuclidianDistances, n_samples, perp, P);

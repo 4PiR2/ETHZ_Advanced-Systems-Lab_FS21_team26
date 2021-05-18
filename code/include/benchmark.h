@@ -4,6 +4,7 @@
 
 #ifndef BENCHMARK_H
 #define BENCHMARK_H
+
 #define MAXN_TIMERS 20
 #define MAX_TIMER_NAME_LEN 30
 
@@ -18,8 +19,9 @@ struct timer {
     myInt64 ed;
 };
 
-int ntimers = 0;
-struct timer timers[MAXN_TIMERS];
+// must be defined in main.c
+extern int ntimers;
+extern struct timer timers[MAXN_TIMERS];
 
 inline thandle create_timer(const char* name) {
     timers[ntimers].rep = 0;
