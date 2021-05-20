@@ -28,9 +28,7 @@ void baselineCompare(const float *X, const float *Y, const int size) {
 }
 
 void readData(float *x, float *y, const std::string &filename, int seed, int n_samples, int d_in, int d_out) {
-	mat_clear_margin(y, d_out, n_samples);
 	mat_rand_norm(y, n_samples, d_out, 0.f, 1e-4f, true, seed);
-	mat_clear_margin(x, n_samples, d_in);
 	mat_load(x, n_samples, d_in, filename);
 }
 
@@ -73,8 +71,8 @@ void getLowDimResult(float *y, float *u, float *g, float *p, float *t, int n_sam
                      float eta, int n_iter) {
 	for (int i = 0; i < n_iter; i++) {
 		compute_t(y, t, n_samples, d_out);
-		float sum_t_inv = compute_sum_t_inv(t, n_samples);
-		gradientCompute(y, g, p, t, sum_t_inv, n_samples, d_out);
+		float t_sum_inv = compute_t_sum_inv(t, n_samples);
+		gradientCompute(y, g, p, t, t_sum_inv, n_samples, d_out);
 		gradientUpdate(y, u, g, n_samples, d_out, alpha, eta);
 	}
 }
