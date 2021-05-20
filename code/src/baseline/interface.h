@@ -19,8 +19,7 @@ void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, f
 void getLowDimResult(float *y, float *u, float *g, float *p, float *t, int n_samples, int d_out, float alpha,
                      float eta, int n_iter) {
 	for (int i = 0; i < n_iter; i++) {
-		compute_t(y, t, n_samples, d_out);
-		float t_sum_inv = compute_t_sum_inv(t, n_samples);
+		float t_sum_inv = compute_t(y, t, n_samples, d_out);
 		gradientCompute(y, g, p, t, t_sum_inv, n_samples, d_out);
 		gradientUpdate(y, u, g, n_samples, d_out, alpha, eta);
 	}

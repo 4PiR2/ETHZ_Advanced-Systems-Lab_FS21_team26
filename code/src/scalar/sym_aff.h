@@ -1,7 +1,7 @@
 #ifndef SYM_AFF_H
 #define SYM_AFF_H
 
-void getSquaredEuclideanDistances(float *x, int n_samples, int d_in, float *DD) {
+void getSquaredEuclideanDistances(float *x, int n_samples, int d_in, float *d) {
 	for (int i = 0; i < n_samples; i++) {
 		for (int j = i + 1; j < n_samples; j++) {
 			float tmp;
@@ -35,9 +35,9 @@ void getSquaredEuclideanDistances(float *x, int n_samples, int d_in, float *DD) 
 				float sq = x[i * d_in + k] - x[j * d_in + k];
 				tmp += sq * sq;
 			}
-			DD[i * n_samples + j] = DD[j * n_samples + i] = tmp;
+			d[i * n_samples + j] = d[j * n_samples + i] = tmp;
 		}
-		DD[i * n_samples + i] = 0.f;
+		d[i * n_samples + i] = 0.f;
 	}
 }
 

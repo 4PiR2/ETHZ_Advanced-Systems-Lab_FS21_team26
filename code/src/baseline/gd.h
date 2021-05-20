@@ -1,7 +1,8 @@
 #ifndef GD_H
 #define GD_H
 
-void compute_t(float *y, float *t, int n_samples, int d_out) {
+float compute_t(float *y, float *t, int n_samples, int d_out) {
+	float sum_t = 0.f;
 	for (int i = 0; i < n_samples; i++) {
 		t[i * n_samples + i] = 0.f;
 		for (int j = i + 1; j < n_samples; j++) {
@@ -10,16 +11,9 @@ void compute_t(float *y, float *t, int n_samples, int d_out) {
 				float diff = y[i * d_out + k] - y[j * d_out + k];
 				dist += diff * diff;
 			}
-			t[j * n_samples + i] = t[i * n_samples + j] = 1.f / dist;
-		}
-	}
-}
-
-float compute_t_sum_inv(float *t, int n_samples) {
-	float sum_t = 0.f;
-	for (int i = 0; i < n_samples; i++) {
-		for (int j = i + 1; j < n_samples; j++) {
-			sum_t += t[i * n_samples + j];
+			float aff = 1.f / dist;
+			t[j * n_samples + i] = t[i * n_samples + j] = aff;
+			sum_t += aff;
 		}
 	}
 	return .5f / sum_t;
