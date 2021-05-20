@@ -7,8 +7,8 @@
 #else
 /* if we're neither compiling with gcc or under linux, we can hope
 		 * the following lines work, they probably won't */
-		#define ASM asm
-		#define VOLATILE 
+#define ASM asm
+#define VOLATILE
 #endif
 
 #define myInt64 unsigned long long
@@ -18,7 +18,7 @@
 #else
 
 #define myInt64 signed __int64
-	#define INT32 unsigned __int32
+#define INT32 unsigned __int32
 
 #endif
 
@@ -33,23 +33,25 @@
 #define COUNTER_VAL(a) ((a).int64)
 
 #define COUNTER(a) \
-	((unsigned long long)COUNTER_VAL(a))
+    ((unsigned long long)COUNTER_VAL(a))
 
-#define COUNTER_DIFF(a,b) \
-	(COUNTER(a)-COUNTER(b))
+#define COUNTER_DIFF(a, b) \
+    (COUNTER(a)-COUNTER(b))
 
 /* ==================== GNU C and possibly other UNIX compilers ===================== */
 #ifndef _WIN32
 
-typedef union
-{       myInt64 int64;
-	struct {INT32 lo, hi;} int32;
+typedef union {
+	myInt64 int64;
+	struct {
+		INT32 lo, hi;
+	} int32;
 } tsc_counter;
 
 #define RDTSC(cpu_c) \
-	  ASM VOLATILE ("rdtsc" : "=a" ((cpu_c).int32.lo), "=d"((cpu_c).int32.hi))
+      ASM VOLATILE ("rdtsc" : "=a" ((cpu_c).int32.lo), "=d"((cpu_c).int32.hi))
 #define CPUID() \
-		ASM VOLATILE ("cpuid" : : "a" (0) : "bx", "cx", "dx" )
+        ASM VOLATILE ("cpuid" : : "a" (0) : "bx", "cx", "dx" )
 
 /* ======================== WIN32 ======================= */
 #else
@@ -59,13 +61,13 @@ typedef union
 			struct {INT32 lo, hi;} int32;
 	} tsc_counter;
 
-	#define RDTSC(cpu_c)   \
+#define RDTSC(cpu_c)   \
 	{       __asm rdtsc    \
 			__asm mov (cpu_c).int32.lo,eax  \
 			__asm mov (cpu_c).int32.hi,edx  \
 	}
 
-	#define CPUID() \
+#define CPUID() \
 	{ \
 		__asm mov eax, 0 \
 		__asm cpuid \

@@ -1,7 +1,7 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-#include "mat.h"
+#include "../common/mat.h"
 #include "pre.h"
 #include "gd.h"
 

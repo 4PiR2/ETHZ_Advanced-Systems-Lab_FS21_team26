@@ -12,7 +12,7 @@ CC := g++
 # modify #define branches here
 # DEF := -Dxxx
 
-CPPFLAGS := -Iinclude -MMD -MP $(DEF) -O3 -march=native -ffast-math
+CPPFLAGS := -MMD -MP $(DEF) -O3 -march=native -ffast-math
 # To compile AVX-512 version, set -march=icelake-client flag!
 CFLAGS   := -Wall
 LDFLAGS  := -Llib
@@ -49,5 +49,5 @@ test_benchmark: test/test_benchmark.c
 test_sym_aff: test/test_sym_aff.c
 	$(CC) $(CPPFLAGS) -o bin/test_sym_aff test/test_sym_aff.c && ./bin/test_sym_aff
 
-# -include $(OBJS:.o=.d)
+# -common $(OBJS:.o=.d)
 

@@ -3,7 +3,7 @@ import numpy as np
 n_samples = 500
 d_in = 784
 
-x = np.loadtxt('datasets/mnist/mnist_data_70kx784.txt', max_rows=n_samples)[:, :d_in]
+x = np.loadtxt('../datasets/mnist/mnist_data_70kx784.txt', max_rows=n_samples)[:, :d_in]
 
 p = np.zeros((n_samples, n_samples))
 for i in range(n_samples):
@@ -68,5 +68,5 @@ p = (p + p.T) / (2 * n_samples)
 
 mat_target = p
 mat_test = np.loadtxt('output_matrix.txt')
-diff = np.abs((mat_target - mat_test) / mat_target)
+diff = np.abs(mat_test - mat_target) / (np.abs(mat_target) + 1e-12)
 print(np.max(diff[mat_target != 0]))

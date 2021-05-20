@@ -7,6 +7,7 @@
 
 void pre_pair_sq_dist(float *p, float *x, int n_samples, int d_in) {
 	// p: lower 16-blocked triangle
+	// TODO: may try 8x2 or 4x4 blocking
 	__m512 a, b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, zerofs = _mm512_setzero_ps(),
 			c, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15;
 	int N = (n_samples + 15) & (-1 ^ 15), D = (d_in + 15) & (-1 ^ 15);
@@ -126,7 +127,7 @@ int pre_perplex_bi_search(float *p, float perplexity, float epsilon, int max_ite
 				_mm512_store_ps(e_m + j, e);
 				sum_e += e;
 				d = _mm512_load_ps(p + iN + j);
-				nsum_edb = _mm512_fnmadd_ps(e * d, betas, nsum_edb);
+				nsum_edb = _mm512_fnmadd_ps(e, d * betas, nsum_edb);
 			}
 			s = _mm512_reduce_add_ps(sum_e);
 			h = _mm512_reduce_add_ps(nsum_edb) / s + logf(s);

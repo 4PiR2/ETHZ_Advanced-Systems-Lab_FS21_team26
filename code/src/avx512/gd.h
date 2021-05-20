@@ -14,7 +14,7 @@ float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
 	int N = (n_samples + 15) & (-1 ^ 15);
 	for (int i = 0; i < N; i += 16) {
 		for (int j = 0; j <= i; j += 16) {
-			c0 = c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c9 = c10 = c11 = c12 = c13 = c14 = c15 = zerofs;
+			c0 = c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c9 = c10 = c11 = c12 = c13 = c14 = c15 = onefs;
 			for (int k = 0, kN = 0; k < d_out; ++k, kN += N) {
 				a = _mm512_load_ps(y + kN + i);
 				b = _mm512_load_ps(y + kN + j);
@@ -83,22 +83,22 @@ float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
 				a15 -= b;
 				c15 = _mm512_fmadd_ps(a15, a15, c15);
 			}
-			c0 = _mm512_rcp14_ps(c0 + onefs);
-			c1 = _mm512_rcp14_ps(c1 + onefs);
-			c2 = _mm512_rcp14_ps(c2 + onefs);
-			c3 = _mm512_rcp14_ps(c3 + onefs);
-			c4 = _mm512_rcp14_ps(c4 + onefs);
-			c5 = _mm512_rcp14_ps(c5 + onefs);
-			c6 = _mm512_rcp14_ps(c6 + onefs);
-			c7 = _mm512_rcp14_ps(c7 + onefs);
-			c8 = _mm512_rcp14_ps(c8 + onefs);
-			c9 = _mm512_rcp14_ps(c9 + onefs);
-			c10 = _mm512_rcp14_ps(c10 + onefs);
-			c11 = _mm512_rcp14_ps(c11 + onefs);
-			c12 = _mm512_rcp14_ps(c12 + onefs);
-			c13 = _mm512_rcp14_ps(c13 + onefs);
-			c14 = _mm512_rcp14_ps(c14 + onefs);
-			c15 = _mm512_rcp14_ps(c15 + onefs);
+			c0 = _mm512_rcp14_ps(c0);
+			c1 = _mm512_rcp14_ps(c1);
+			c2 = _mm512_rcp14_ps(c2);
+			c3 = _mm512_rcp14_ps(c3);
+			c4 = _mm512_rcp14_ps(c4);
+			c5 = _mm512_rcp14_ps(c5);
+			c6 = _mm512_rcp14_ps(c6);
+			c7 = _mm512_rcp14_ps(c7);
+			c8 = _mm512_rcp14_ps(c8);
+			c9 = _mm512_rcp14_ps(c9);
+			c10 = _mm512_rcp14_ps(c10);
+			c11 = _mm512_rcp14_ps(c11);
+			c12 = _mm512_rcp14_ps(c12);
+			c13 = _mm512_rcp14_ps(c13);
+			c14 = _mm512_rcp14_ps(c14);
+			c15 = _mm512_rcp14_ps(c15);
 			block_store(t + i * N + j, N, c0, c1, c2, c3, c4, c5, c6, c7,
 			            c8, c9, c10, c11, c12, c13, c14, c15);
 			csum = (((c0 + c1) + (c2 + c3)) + ((c4 + c5) + (c6 + c7))) +
