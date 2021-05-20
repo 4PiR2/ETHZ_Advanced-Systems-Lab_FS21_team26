@@ -1,5 +1,5 @@
-#ifndef PREPROCESSING_H
-#define PREPROCESSING_H
+#ifndef PRE_H
+#define PRE_H
 
 #include <cmath>
 
@@ -9,9 +9,9 @@ int MAX_ITERATIONS = 200;
 // define the error tolerance for the perplexity
 float ERROR_TOLERANCE = 1e-5f;
 
-void _getSquaredEuclideanDistances(float *x, int n_samples, int d_in, float *DD) {
+void _getSquaredEuclideanDistances(float *x, int n_samples, int d_in, float *d) {
 	for (int i = 0; i < n_samples; i++) {
-		DD[i * n_samples + i] = 0.f;
+		d[i * n_samples + i] = 0.f;
 		for (int j = i + 1; j < n_samples; j++) {
 			float dist = x[i * d_in] - x[j * d_in];
 			dist *= dist;
@@ -19,27 +19,25 @@ void _getSquaredEuclideanDistances(float *x, int n_samples, int d_in, float *DD)
 				float diff = x[i * d_in + k] - x[j * d_in + k];
 				dist += diff * diff;
 			}
-			DD[j * n_samples + i] = DD[i * n_samples + j] = dist;
+			d[j * n_samples + i] = d[i * n_samples + j] = dist;
 		}
 	}
 }
 
-void _getPairwiseAffinity(float *DD, int n_samples, float perplexity, float *p) {
+void _getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 	float log_perp = logf(perplexity), lb = log_perp - ERROR_TOLERANCE, rb = log_perp + ERROR_TOLERANCE;
 	// compute affinities row by row
 	for (int i = 0; i < n_samples; i++) {
 		float maxv = std::numeric_limits<float>::min();
 		for (int j = 0; j < n_samples; j++) {
-			float dist = DD[i * n_samples + j];
+			float dist = d[i * n_samples + j];
 			if (dist > maxv) {
 				maxv = dist;
 			}
 		}
 		// initialize beta values, beta := -.5f / (sigma * sigma)
-		float beta = -1.f / maxv;
-		float beta_max, beta_min;
+		float beta = -1.f / maxv, beta_max, beta_min, sum;
 		bool flag0 = true, flag1 = true;
-		float sum;
 		// perform binary search to find the optimal beta values for each data point
 		for (int k = 0; k < MAX_ITERATIONS; ++k) {
 			// compute the conditional Gaussian densities for point i
@@ -47,7 +45,7 @@ void _getPairwiseAffinity(float *DD, int n_samples, float perplexity, float *p) 
 			float shannon_entropy = 0.f;
 			for (int j = 0; j < n_samples; j++) {
 				if (i != j) {
-					float bd = beta * DD[i * n_samples + j];
+					float bd = beta * d[i * n_samples + j];
 					float gaussian_density = expf(bd);
 					shannon_entropy -= bd * gaussian_density;
 					sum += gaussian_density;
@@ -96,4 +94,4 @@ void _symmetrizeAffinities(float *p, int n_samples) {
 	}
 }
 
-#endif //PREPROCESSING_H
+#endif //PRE_H

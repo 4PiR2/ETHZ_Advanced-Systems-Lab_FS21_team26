@@ -31,7 +31,7 @@ char timers_to_show[][MAX_TIMER_NAME_LEN] = {
 int n_timers_to_show = sizeof(timers_to_show) / MAX_TIMER_NAME_LEN;
 // first: current, second: baseline
 char timers_to_compare[][2][MAX_TIMER_NAME_LEN] = {
-		{"DD", "_DD"},
+		{"ED", "_ED"},
 		// {"PA", "_PA"},
 		// {"SA", "_SA"},
 };

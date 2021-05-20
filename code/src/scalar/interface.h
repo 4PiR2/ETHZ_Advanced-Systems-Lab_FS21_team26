@@ -6,21 +6,21 @@
 
 #include "../common/mat.h"
 #include "sym_aff.h"
-#include "../baseline/preprocessing.h"
-#include "../baseline/gradient_descent.h"
+#include "../baseline/pre.h"
+#include "../baseline/gd.h"
 
 #define DEBUG
 
-#define eps_baselines 1e-5
+#define eps_baselines 1e-5f
 // C is the assertion message
-#define assertEq(A, B) assert(std::fabs((B - A) / (std::fabs(A) + 1e-7)) <= eps_baselines)
+#define assertEq(A, B) assert(std::fabs((B - A) / (std::fabs(A) + 1e-7f)) <= eps_baselines)
 // #define assertEq(A,B) assert(std::fabs((B - A)) <= eps_baselines)
 
 void baselineCompare(const float *X, const float *Y, const int size) {
 #ifdef DEBUG
 	for (int i = 0; i < size; i++) {
 		// if (!(std::fabs(Y[i] - X[i]) <= eps_baselines)) {
-		if (std::fabs(Y[i] - X[i]) / (std::fabs(X[i]) + 1e-7) > eps_baselines) {
+		if (std::fabs(Y[i] - X[i]) / (std::fabs(X[i]) + 1e-7f) > eps_baselines) {
 			printf("Assertion Failed: %f %f\n", X[i], Y[i]);
 		}
 	}
@@ -34,27 +34,27 @@ void readData(float *x, float *y, const std::string &filename, int seed, int n_s
 	mat_load(x, n_samples, d_in, filename);
 }
 
-void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, float *p, float *DD) {
-	thandle t1 = create_timer("DD"), t2 = create_timer("_DD");
+void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, float *p, float *d) {
+	thandle t1 = create_timer("ED"), t2 = create_timer("_ED");
 	start(t1);
-	getSquaredEuclideanDistances(x, n_samples, d_in, DD);
+	getSquaredEuclideanDistances(x, n_samples, d_in, d);
 	stop(t1);
 	// baseline
-	auto _DD = mat_alloc<float>(n_samples, n_samples);
+	auto _d = mat_alloc<float>(n_samples, n_samples);
 	start(t2);
-	_getSquaredEuclideanDistances(x, n_samples, d_in, _DD);
+	_getSquaredEuclideanDistances(x, n_samples, d_in, _d);
 	stop(t2);
-	baselineCompare(DD, _DD, n_samples * n_samples);
+	baselineCompare(d, _d, n_samples * n_samples);
 
 	// compute pairwise affinities
 	t1 = create_timer("PA"), t2 = create_timer("_PA");
 	start(t1);
-	_getPairwiseAffinity(DD, n_samples, perplexity, p);
+	_getPairwiseAffinity(d, n_samples, perplexity, p);
 	stop(t1);
 	// baseline
 	auto _p = mat_alloc<float>(n_samples, n_samples);
 	start(t2);
-	_getPairwiseAffinity(DD, n_samples, perplexity, _p);
+	_getPairwiseAffinity(d, n_samples, perplexity, _p);
 	stop(t2);
 	baselineCompare(p, _p, n_samples * n_samples);
 
@@ -69,13 +69,13 @@ void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, f
 	baselineCompare(p, _p, n_samples * n_samples);
 }
 
-void getLowDimResult(float *y, float *dy, float *grad_cy, float *p, float *t, int n_samples, int d_out, float alpha,
+void getLowDimResult(float *y, float *u, float *g, float *p, float *t, int n_samples, int d_out, float alpha,
                      float eta, int n_iter) {
 	for (int i = 0; i < n_iter; i++) {
 		compute_t(y, t, n_samples, d_out);
 		float sum_t_inv = compute_sum_t_inv(t, n_samples);
-		gradientCompute(y, grad_cy, p, t, sum_t_inv, n_samples, d_out);
-		gradientUpdate(y, dy, grad_cy, n_samples, d_out, alpha, eta);
+		gradientCompute(y, g, p, t, sum_t_inv, n_samples, d_out);
+		gradientUpdate(y, u, g, n_samples, d_out, alpha, eta);
 	}
 }
 
@@ -91,23 +91,23 @@ run(int n_samples, int d_out, int d_in, int rep, float eta, float alpha, float p
 				t = mat_alloc<float>(n_samples, n_samples),
 				y = mat_alloc<float>(n_samples, d_out),
 				u = mat_alloc<float>(n_samples, d_out),
-				grad_cy = mat_alloc<float>(n_samples, d_out),
-				DD = mat_alloc<float>(n_samples, n_samples);
+				g = mat_alloc<float>(n_samples, d_out),
+				d = mat_alloc<float>(n_samples, n_samples);
 		readData(x, y, file_in, 13, n_samples, d_in, d_out);
 
 		start(t1);
-		getSymmetricAffinity(x, n_samples, d_in, (float) perplexity, p, DD);
+		getSymmetricAffinity(x, n_samples, d_in, (float) perplexity, p, d);
 		stop(t1);
 
 		mat_store(p, n_samples, n_samples, "../output/p_matrix.txt");
 
 		start(t2);
-		getLowDimResult(y, u, grad_cy, p, t, n_samples, d_out, alpha, eta, n_iter);
+		getLowDimResult(y, u, g, p, t, n_samples, d_out, alpha, eta, n_iter);
 		stop(t2);
 
 		mat_store(y, n_samples, d_out, file_out);
 
-		mat_free_batch(7, x, p, t, y, u, grad_cy, DD);
+		mat_free_batch(7, x, p, t, y, u, g, d);
 	}
 
 	benchmark_print();
