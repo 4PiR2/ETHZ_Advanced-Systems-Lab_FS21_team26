@@ -2,7 +2,7 @@
 #define PRE_H
 
 #include <cmath>
-#include "block.h"
+#include "block16.h"
 #include "exp.h"
 
 void pre_pair_sq_dist(float *p, float *x, int n_samples, int d_in) {
@@ -16,7 +16,7 @@ void pre_pair_sq_dist(float *p, float *x, int n_samples, int d_in) {
 			c0 = c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = c9 = c10 = c11 = c12 = c13 = c14 = c15 = zerofs;
 			for (int k = 0; k < D; k += 16) {
 				a = _mm512_load_ps(x + iD + k);
-				block_load(x + jD + k, D, b0, b1, b2, b3, b4, b5, b6, b7,
+				block16_load(x + jD + k, D, b0, b1, b2, b3, b4, b5, b6, b7,
 				           b8, b9, b10, b11, b12, b13, b14, b15);
 				b0 -= a;
 				c0 = _mm512_fmadd_ps(b0, b0, c0);
@@ -51,7 +51,7 @@ void pre_pair_sq_dist(float *p, float *x, int n_samples, int d_in) {
 				b15 -= a;
 				c15 = _mm512_fmadd_ps(b15, b15, c15);
 			}
-			c = block_row_sum(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15);
+			c = block16_row_sum(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15);
 			_mm512_store_ps(p + iN + j, c);
 		}
 	}
@@ -71,11 +71,11 @@ void pre_unfold_low_tri(float *p, int n_samples) {
 	int N = (n_samples + 15) & (-1 ^ 15);
 	for (int i = 16, iN = i * N; i < N; i += 16, iN += N * 16) {
 		for (int j = 0, jN = 0; j < i; j += 16, jN += N * 16) {
-			block_load(p + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
+			block16_load(p + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
 			           r8, r9, r10, r11, r12, r13, r14, r15);
-			block_transpose(r0, r1, r2, r3, r4, r5, r6, r7,
+			block16_transpose(r0, r1, r2, r3, r4, r5, r6, r7,
 			                r8, r9, r10, r11, r12, r13, r14, r15);
-			block_store(p + jN + i, N, r0, r1, r2, r3, r4, r5, r6, r7,
+			block16_store(p + jN + i, N, r0, r1, r2, r3, r4, r5, r6, r7,
 			            r8, r9, r10, r11, r12, r13, r14, r15);
 		}
 	}
@@ -108,7 +108,7 @@ int pre_perplex_bi_search(float *p, float perplexity, float epsilon, int max_ite
 					case 0:
 						d = _mm512_load_ps(p + iN + j);
 						mask = _mm512_test_epi32_mask((__m512i) d, (__m512i) d);
-						e = exp_ps(d * betas);
+						e = exp_app_ps(d * betas);
 						e = _mm512_maskz_mov_ps(mask, e); // assume data points are unique
 						break;
 					case 1:
@@ -174,11 +174,11 @@ void pre_sym_aff_ex(float *p, float *p_ex, float ex_rate, int n_samples) {
 	int N = (n_samples + 15) & (-1 ^ 15);
 	for (int i = 0, iN = i * N; i < N; i += 16, iN += N * 16) {
 		for (int j = 0, jN = 0; j <= i; j += 16, jN += N * 16) {
-			block_load(p + jN + i, N, c0, c1, c2, c3, c4, c5, c6, c7,
+			block16_load(p + jN + i, N, c0, c1, c2, c3, c4, c5, c6, c7,
 			           c8, c9, c10, c11, c12, c13, c14, c15);
-			block_transpose(c0, c1, c2, c3, c4, c5, c6, c7,
+			block16_transpose(c0, c1, c2, c3, c4, c5, c6, c7,
 			                c8, c9, c10, c11, c12, c13, c14, c15);
-			block_load(p + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
+			block16_load(p + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
 			           r8, r9, r10, r11, r12, r13, r14, r15);
 			r0 = (r0 + c0) * k;
 			r1 = (r1 + c1) * k;
@@ -196,7 +196,7 @@ void pre_sym_aff_ex(float *p, float *p_ex, float ex_rate, int n_samples) {
 			r13 = (r13 + c13) * k;
 			r14 = (r14 + c14) * k;
 			r15 = (r15 + c15) * k;
-			block_store(p + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
+			block16_store(p + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
 			            r8, r9, r10, r11, r12, r13, r14, r15);
 			if (p_ex) {
 				r0 *= ex_rates;
@@ -215,7 +215,7 @@ void pre_sym_aff_ex(float *p, float *p_ex, float ex_rate, int n_samples) {
 				r13 *= ex_rates;
 				r14 *= ex_rates;
 				r15 *= ex_rates;
-				block_store(p_ex + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
+				block16_store(p_ex + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
 				            r8, r9, r10, r11, r12, r13, r14, r15);
 			}
 		}

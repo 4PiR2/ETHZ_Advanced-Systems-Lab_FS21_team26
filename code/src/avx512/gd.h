@@ -1,7 +1,7 @@
 #ifndef GD_H
 #define GD_H
 
-#include "block.h"
+#include "block16.h"
 
 float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
 	// t: lower 16-blocked triangle, diag elem = 1, margin = 0
@@ -99,7 +99,7 @@ float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
 			c13 = _mm512_rcp14_ps(c13);
 			c14 = _mm512_rcp14_ps(c14);
 			c15 = _mm512_rcp14_ps(c15);
-			block_store(t + i * N + j, N, c0, c1, c2, c3, c4, c5, c6, c7,
+			block16_store(t + i * N + j, N, c0, c1, c2, c3, c4, c5, c6, c7,
 			            c8, c9, c10, c11, c12, c13, c14, c15);
 			csum = (((c0 + c1) + (c2 + c3)) + ((c4 + c5) + (c6 + c7))) +
 			       (((c8 + c9) + (c10 + c11)) + ((c12 + c13) + (c14 + c15)));
@@ -144,9 +144,9 @@ void gd_update_calc(float *u, float *y, float *p, float *t, float t_sum, float e
 	int N = (n_samples + 15) & (-1 ^ 15);
 	for (int i = 0, iN = 0; i < N; i += 16, iN += N * 16) {
 		for (int j = 0; j <= i; j += 16) {
-			block_load(p + i * N + j, N, p0, p1, p2, p3, p4, p5, p6, p7,
+			block16_load(p + i * N + j, N, p0, p1, p2, p3, p4, p5, p6, p7,
 			           p8, p9, p10, p11, p12, p13, p14, p15);
-			block_load(t + i * N + j, N, t0, t1, t2, t3, t4, t5, t6, t7,
+			block16_load(t + i * N + j, N, t0, t1, t2, t3, t4, t5, t6, t7,
 			           t8, t9, t10, t11, t12, t13, t14, t15);
 			t0 = _mm512_fnmadd_ps(t0, t_rcp, p0) * t0;
 			t1 = _mm512_fnmadd_ps(t1, t_rcp, p1) * t1;
@@ -238,7 +238,7 @@ void gd_update_calc(float *u, float *y, float *p, float *t, float t_sum, float e
 				_mm512_store_ps(u + kN + j, uj);
 				if (i != j) {
 					ui = _mm512_load_ps(u + kN + i);
-					rsum = block_row_sum(a0, a1, a2, a3, a4, a5, a6, a7,
+					rsum = block16_row_sum(a0, a1, a2, a3, a4, a5, a6, a7,
 					                     a8, a9, a10, a11, a12, a13, a14, a15);
 					ui = _mm512_fnmadd_ps(rsum, etax4, ui);
 					_mm512_store_ps(u + kN + i, ui);

@@ -44,4 +44,15 @@ inline __m512 exp_ps(__m512 x) {
 	return y;
 }
 
+inline __m512 exp_app_ps(__m512 x) {
+	// -1 <= x <= 0
+	__m512 a0 = _mm512_set1_ps(1.f);
+	__m512 a1 = _mm512_set1_ps(.93f);
+	__m512 a2 = _mm512_set1_ps(.3f);
+	__m512 y;
+	y = _mm512_fmadd_ps(a2, x, a1);
+	y = _mm512_fmadd_ps(y, x, a0);
+	return y;
+}
+
 #endif //EXP_H

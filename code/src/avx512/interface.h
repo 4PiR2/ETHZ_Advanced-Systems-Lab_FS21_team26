@@ -1,6 +1,8 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
+#define ALIGN_ELEM 16
+
 #include "../common/mat.h"
 #include "pre.h"
 #include "gd.h"
@@ -39,7 +41,7 @@ void getLowdResult(float *y, float *u, float *p, float *p_ex, float *t,
 void run_test() {
 	int n_samples = 900, d_in = 784, d_out = 3, n_iter = 1000, n_iter_ex = 250, seed = 0;
 	float perplexity = 50.f, ex_rate = 12.f, eta = 50.f, alpha = .8f, alpha_ex = .5f;
-	std::string file_in = "datasets/mnist/mnist_data_70kx784.txt", file_out = "output_matrix.txt";
+	std::string file_in = "../datasets/mnist/mnist_data_70kx784.txt", file_out = "../output/output_matrix.txt";
 
 	auto x = mat_alloc<float>(n_samples, d_in),
 			p = mat_alloc<float>(n_samples, n_samples),

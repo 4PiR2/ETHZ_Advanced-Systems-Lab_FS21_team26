@@ -1,12 +1,12 @@
-#ifndef BLOCK_H
-#define BLOCK_H
+#ifndef BLOCK16_H
+#define BLOCK16_H
 
 #include "immintrin.h"
 
-inline void block_transpose(__m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
-                            __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
-                            __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
-                            __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
+inline void block16_transpose(__m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
+                              __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
+                              __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
+                              __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
 	__m512 ta0, ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8, ta9, ta10, ta11, ta12, ta13, ta14, ta15,
 			tb0, tb1, tb2, tb3, tb4, tb5, tb6, tb7, tb8, tb9, tb10, tb11, tb12, tb13, tb14, tb15,
 			tc0, tc1, tc2, tc3, tc4, tc5, tc6, tc7, tc8, tc9, tc10, tc11, tc12, tc13, tc14, tc15;
@@ -80,10 +80,10 @@ inline void block_transpose(__m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
 	r15 = _mm512_permutex2var_ps(tc7, idxc1, tc15);
 }
 
-inline __m512 block_row_sum(__m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
-                            __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
-                            __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
-                            __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
+inline __m512 block16_row_sum(__m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
+                              __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
+                              __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
+                              __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
 	__m512 ta0, ta2, ta4, ta6, ta8, ta10, ta12, ta14, tb0, tb4, tb8, tb12, tc0, tc8;
 	__m512i idxb0 = _mm512_set_epi32(27, 26, 25, 24, 11, 10, 9, 8, 19, 18, 17, 16, 3, 2, 1, 0),
 			idxb = _mm512_set1_epi32(4), idxb1 = idxb0 + idxb,
@@ -110,10 +110,10 @@ inline __m512 block_row_sum(__m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
 	return _mm512_permutex2var_ps(tc0, idxc0, tc8) + _mm512_permutex2var_ps(tc0, idxc1, tc8);
 }
 
-inline void block_load(float *p, int M, __m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
-                       __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
-                       __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
-                       __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
+inline void block16_load(float *p, int M, __m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
+                         __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
+                         __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
+                         __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
 	r0 = _mm512_load_ps(p);
 	r1 = _mm512_load_ps(p + M);
 	r2 = _mm512_load_ps(p + M * 2);
@@ -132,10 +132,10 @@ inline void block_load(float *p, int M, __m512 &r0, __m512 &r1, __m512 &r2, __m5
 	r15 = _mm512_load_ps(p + M * 15);
 }
 
-inline void block_store(float *p, int M, __m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
-                        __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
-                        __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
-                        __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
+inline void block16_store(float *p, int M, __m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
+                          __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
+                          __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
+                          __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
 	_mm512_store_ps(p, r0);
 	_mm512_store_ps(p + M, r1);
 	_mm512_store_ps(p + M * 2, r2);
@@ -154,10 +154,10 @@ inline void block_store(float *p, int M, __m512 &r0, __m512 &r1, __m512 &r2, __m
 	_mm512_store_ps(p + M * 15, r15);
 }
 
-void block_debug_load(float a[][16], __m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
-                      __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
-                      __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
-                      __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
+void block16_debug_load(float **a, __m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
+                        __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
+                        __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
+                        __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
 	r0 = _mm512_loadu_ps(a[0]);
 	r1 = _mm512_loadu_ps(a[1]);
 	r2 = _mm512_loadu_ps(a[2]);
@@ -176,10 +176,10 @@ void block_debug_load(float a[][16], __m512 &r0, __m512 &r1, __m512 &r2, __m512 
 	r15 = _mm512_loadu_ps(a[15]);
 }
 
-void block_debug_store(float a[][16], __m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
-                       __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
-                       __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
-                       __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
+void block16_debug_store(float **a, __m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
+                         __m512 &r4, __m512 &r5, __m512 &r6, __m512 &r7,
+                         __m512 &r8, __m512 &r9, __m512 &r10, __m512 &r11,
+                         __m512 &r12, __m512 &r13, __m512 &r14, __m512 &r15) {
 	_mm512_storeu_ps(a[0], r0);
 	_mm512_storeu_ps(a[1], r1);
 	_mm512_storeu_ps(a[2], r2);
@@ -198,4 +198,4 @@ void block_debug_store(float a[][16], __m512 &r0, __m512 &r1, __m512 &r2, __m512
 	_mm512_storeu_ps(a[15], r15);
 }
 
-#endif //BLOCK_H
+#endif //BLOCK16_H
