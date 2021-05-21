@@ -1,6 +1,8 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
+#define ALIGN_ELEM 1
+
 #include <cassert>
 #include <cmath>
 

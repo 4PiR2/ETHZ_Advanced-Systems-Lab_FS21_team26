@@ -12,6 +12,7 @@
 #define ALIGN_ELEM 1
 // ALIGN_ELEM: 16, 8, ..., 1
 #endif
+
 #define ALIGNMENT (32 * (ALIGN_ELEM))
 // ALIGNMENT: 512, 256, ..., sizeof(T) * 8
 
