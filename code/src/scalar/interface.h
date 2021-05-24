@@ -11,7 +11,7 @@
 
 #define DEBUG
 
-#define eps_baselines 1e-5f
+#define eps_baselines 1e-2f
 // C is the assertion message
 #define assertEq(A, B) assert(std::fabs((B - A) / (std::fabs(A) + 1e-7f)) <= eps_baselines)
 // #define assertEq(A,B) assert(std::fabs((B - A)) <= eps_baselines)
@@ -34,11 +34,11 @@ void readData(float *x, float *y, const std::string &filename, int seed, int n_s
 
 void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, float *p, float *d) {
 	thandle t1 = create_timer("ED"), t2 = create_timer("_ED");
+
+	auto _d = mat_alloc<float>(n_samples, n_samples);
 	start(t1);
 	getSquaredEuclideanDistances(x, n_samples, d_in, d);
 	stop(t1);
-	// baseline
-	auto _d = mat_alloc<float>(n_samples, n_samples);
 	start(t2);
 	_getSquaredEuclideanDistances(x, n_samples, d_in, _d);
 	stop(t2);
@@ -47,7 +47,7 @@ void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, f
 	// compute pairwise affinities
 	t1 = create_timer("PA"), t2 = create_timer("_PA");
 	start(t1);
-	_getPairwiseAffinity(d, n_samples, perplexity, p);
+	getPairwiseAffinity(d, n_samples, perplexity, p);
 	stop(t1);
 	// baseline
 	auto _p = mat_alloc<float>(n_samples, n_samples);

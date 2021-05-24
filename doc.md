@@ -28,3 +28,5 @@ mul: latency 4, throughtput 0.5
 ### Scalar Optimization
 
 #### EuclideanDistance
+scalar op in o3 will be 10 times slower
+in o0 will be 1.75 times faster
