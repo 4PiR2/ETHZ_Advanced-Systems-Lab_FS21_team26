@@ -12,9 +12,6 @@
 #define DEBUG
 
 #define eps_baselines 1e-2f
-// C is the assertion message
-#define assertEq(A, B) assert(std::fabs((B - A) / (std::fabs(A) + 1e-7f)) <= eps_baselines)
-// #define assertEq(A,B) assert(std::fabs((B - A)) <= eps_baselines)
 
 void baselineCompare(const float *X, const float *Y, const int size) {
 #ifdef DEBUG
@@ -37,7 +34,7 @@ void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, f
 
 	auto _d = mat_alloc<float>(n_samples, n_samples);
 	start(t1);
-	getSquaredEuclideanDistances(x, n_samples, d_in, d);
+	_getSquaredEuclideanDistances(x, n_samples, d_in, d);
 	stop(t1);
 	start(t2);
 	_getSquaredEuclideanDistances(x, n_samples, d_in, _d);
@@ -98,6 +95,9 @@ run(int n_samples, int d_out, int d_in, int rep, float eta, float alpha, float p
 
 		mat_store(p, n_samples, n_samples, "../output/p_matrix.txt");
 
+		memset(t, 0, sizeof(float) * n_samples * d_out);
+		memset(g, 0, sizeof(float) * n_samples * d_out);
+		memset(u, 0, sizeof(float) * n_samples * d_out);
 		start(t2);
 		getLowDimResult(y, u, g, p, t, n_samples, d_out, alpha, eta, n_iter);
 		stop(t2);
