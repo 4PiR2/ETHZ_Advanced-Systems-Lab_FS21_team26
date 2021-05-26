@@ -12,7 +12,12 @@ void readData(float *x, float *y, const std::string &filename, int seed, int n_s
 
 void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, float *p, float *d) {
 	_getSquaredEuclideanDistances(x, n_samples, d_in, d);
+
+	thandle t1 = create_timer("PA");
+	start(t1);
 	_getPairwiseAffinity(d, n_samples, perplexity, p);
+	stop(t1);
+	
 	_symmetrizeAffinities(p, n_samples);
 }
 

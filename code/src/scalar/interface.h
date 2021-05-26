@@ -9,12 +9,13 @@
 #include "../baseline/pre.h"
 #include "../baseline/gd.h"
 
-#define DEBUG
+// #define SCALAR_DEBUG
+// #define SCALAR_COMPARISON
 
 #define eps_baselines 1e-2f
 
 void baselineCompare(const float *X, const float *Y, const int size) {
-#ifdef DEBUG
+#ifdef SCALAR_DEBUG
 	for (int i = 0; i < size; i++) {
 		// if (!(std::fabs(Y[i] - X[i]) <= eps_baselines)) {
 		if (std::fabs(Y[i] - X[i]) / (std::fabs(X[i]) + 1e-7f) > eps_baselines) {
@@ -36,10 +37,13 @@ void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, f
 	start(t1);
 	_getSquaredEuclideanDistances(x, n_samples, d_in, d);
 	stop(t1);
+
+	#ifdef SCALAR_COMPARISON
 	start(t2);
 	_getSquaredEuclideanDistances(x, n_samples, d_in, _d);
 	stop(t2);
 	baselineCompare(d, _d, n_samples * n_samples);
+	#endif
 
 	// compute pairwise affinities
 	t1 = create_timer("PA"), t2 = create_timer("_PA");
@@ -47,21 +51,25 @@ void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, f
 	getPairwiseAffinity(d, n_samples, perplexity, p);
 	stop(t1);
 	// baseline
+	#ifdef SCALAR_COMPARISON
 	auto _p = mat_alloc<float>(n_samples, n_samples);
 	start(t2);
 	_getPairwiseAffinity(d, n_samples, perplexity, _p);
 	stop(t2);
 	baselineCompare(p, _p, n_samples * n_samples);
+	#endif
 
 	t1 = create_timer("SA"), t2 = create_timer("_SA");
 	start(t1);
 	_symmetrizeAffinities(p, n_samples);
 	stop(t1);
 	// baseline
+	#ifdef SCALAR_COMPARISON
 	start(t2);
 	_symmetrizeAffinities(_p, n_samples);
 	stop(t2);
 	baselineCompare(p, _p, n_samples * n_samples);
+	#endif
 }
 
 void getLowDimResult(float *y, float *u, float *g, float *p, float *t, int n_samples, int d_out, float alpha,

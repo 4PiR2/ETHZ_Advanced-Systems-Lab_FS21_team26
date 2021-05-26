@@ -136,7 +136,7 @@ inline void avx2_dp_sum(float* x, float* y, float* ret_dp, float* ret_sum, int s
 // deleting beta values
 // #define SYM_AFF_PA_SCALAR_UP2 // 2.11
 // try avx2 functions
-#define SYM_AFF_PA_AVX2 // 7.0(no-vec flag) 1.8(normal)
+// #define SYM_AFF_PA_AVX2 // 7.0(no-vec flag) 1.8(normal)
 // #define SYM_AFF_PA_SCALAR_CURRENT 
 
 void getSquaredEuclideanDistances(float *x, int n_samples, int d_in, float *d) {
