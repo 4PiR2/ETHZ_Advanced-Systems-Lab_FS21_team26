@@ -6,6 +6,7 @@
 
 #include "../common/mat.h"
 #include "sym_aff.h"
+#include "sysmmetrize_aff.h"
 #include "../baseline/pre.h"
 #include "../baseline/gd.h"
 
@@ -61,7 +62,7 @@ void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, f
 
 	t1 = create_timer("SA"), t2 = create_timer("_SA");
 	start(t1);
-	_symmetrizeAffinities(p, n_samples);
+	symmetrizeAffinities(p, n_samples);
 	stop(t1);
 	// baseline
 	#ifdef SCALAR_COMPARISON

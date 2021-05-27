@@ -260,14 +260,6 @@ void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 				}
 			}
 		}
-		float sum_inv = 1.f / sum;
-		// normalize the row
-		for (int j = 0; j < n_samples; j++) {
-			if (i != j) {
-				p[i * n_samples + j] *= sum_inv;
-			}
-		}
-		p[i * n_samples + i] = 0.f;
 	}
 }
 
@@ -382,16 +374,17 @@ void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 	float* bd_mins = (float*)malloc(n_samples * sizeof(float));
 
 	for (int i = 0; i < n_samples; i++) {
+		int row = i * n_samples;
 		float maxv = std::numeric_limits<float>::min();
 		for (int j = 0; j < n_samples; j++) {
-			float dist = d[i * n_samples + j];
+			float dist = d[row + j];
 			if (dist > maxv) {
 				maxv = dist;
 			}
 		}
 		float beta = -1.f / maxv, sum;
 		for (int j = 0; j < n_samples; j++) {
-			bds[j] = beta * d[i * n_samples + j];
+			bds[j] = beta * d[row + j];
 			bd_exps[j] = expf(bds[j]);
 		}
 		bool flag0 = true, flag1 = true;
@@ -459,16 +452,113 @@ void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 			}
 			
 		}
-		float sum_inv = 1.f / sum;
-		for (int j = 0; j < n_samples; j++) {
-			if (i != j) {
-				p[i * n_samples + j] = bd_exps[j] * sum_inv;
-			}
-		}
-		p[i * n_samples + i] = 0.f;
 	}
 }
 #endif // SYM_AFF_SCALAR_UP2
+
+// Replace the 'expf' function call by an approximation
+#ifdef SYM_AFF_PA_SCALAR_UP3
+
+// Power series approximation (of order two) of the exponential function
+inline float exp_app(float x) {
+	float tmp = 1 + x;
+	float tmp2 = x * x * 0.5f;
+	return tmp + tmp2;
+}
+
+void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
+	printf("CURRENT\n");
+	float log_perp = logf(perplexity), lb = log_perp - ERROR_TOLERANCE, rb = log_perp + ERROR_TOLERANCE;
+	
+	float* bd_exps = (float*)malloc(n_samples * sizeof(float));
+	float* bd_max_exps = (float*)malloc(n_samples * sizeof(float));
+	float* bd_min_exps = (float*)malloc(n_samples * sizeof(float));
+	float* bds = (float*)malloc(n_samples * sizeof(float));
+	float* bd_maxs = (float*)malloc(n_samples * sizeof(float));
+	float* bd_mins = (float*)malloc(n_samples * sizeof(float));
+
+	for (int i = 0; i < n_samples; i++) {
+		int row = i * n_samples;
+		float maxv = std::numeric_limits<float>::min();
+		for (int j = 0; j < n_samples; j++) {
+			float dist = d[row + j];
+			if (dist > maxv) {
+				maxv = dist;
+			}
+		}
+		float beta = -1.f / maxv, sum;
+		for (int j = 0; j < n_samples; j++) {
+			bds[j] = beta * d[row + j];
+			bd_exps[j] = exp_app(bds[j]);
+		}
+		bool flag0 = true, flag1 = true;
+
+		// perform binary search to find the optimal beta values for each data point
+		for (int k = 0; k < MAX_ITERATIONS; ++k) {
+			// compute the conditional Gaussian densities for point i
+			sum = 0.f;
+			bds[i] = bd_exps[i] = 0.f;
+			float shannon_entropy = 0.f;
+			for (int j = 0; j < n_samples; j++) {
+				float bd = bds[j];
+				float gaussian_density = bd_exps[j];
+				shannon_entropy -= bd * gaussian_density;
+				sum += gaussian_density;
+			}
+			shannon_entropy = shannon_entropy / sum + logf(sum);
+			if (shannon_entropy > lb && shannon_entropy < rb) {
+				break;
+			}
+			if (shannon_entropy > log_perp) {
+				swapptr(&bd_exps, &bd_min_exps);
+				swapptr(&bds, &bd_mins);
+			}
+			else {
+				swapptr(&bd_exps, &bd_max_exps);
+				swapptr(&bds, &bd_maxs);
+			}
+			if (flag0 || flag1) {
+				if (shannon_entropy > log_perp) {
+					flag1 = false;
+					if (flag0) {
+						for (int j = 0; j < n_samples; j++) {
+							bd_exps[j] = bd_min_exps[j] * bd_min_exps[j];
+							bds[j] = 2.f * bd_mins[j];		
+						}
+					}
+					else {
+						for (int j = 0; j < n_samples; j++) {
+							bd_exps[j] = sqrtf(bd_min_exps[j] * bd_max_exps[j]);
+							bds[j] = (bd_mins[j] + bd_maxs[j]) * .5f;
+						}
+					}
+				} else {
+					flag0 = false;
+					if (flag1) {
+						for (int j = 0; j < n_samples; j++) {
+							bd_exps[j] = sqrtf(bd_max_exps[j]);
+							bds[j] = .5f * bd_maxs[j];
+						}
+					}
+					else {
+						for (int j = 0; j < n_samples; j++) {
+							bd_exps[j] = sqrtf(bd_max_exps[j] * bd_min_exps[j]);
+							bds[j] = (bd_mins[j] + bd_maxs[j]) * .5f;
+						}
+					}
+				}
+			}
+			else {
+				for (int j = 0; j < n_samples; j++) {
+					bd_exps[j] = sqrtf(bd_max_exps[j] * bd_min_exps[j]);
+					bds[j] = (bd_mins[j] + bd_maxs[j]) * .5f;
+				}
+			}
+			
+		}
+	}
+}
+#endif // SYM_AFF_SCALAR_UP3
 
 #ifdef SYM_AFF_PA_AVX2
 // will modify euclidean distance file
@@ -549,13 +639,6 @@ void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 			}
 			
 		}
-		float sum_inv = 1.f / sum;
-		for (int j = 0; j < n_samples; j++) {
-			if (i != j) {
-				p[i * n_samples + j] = bd_exps[j] * sum_inv;
-			}
-		}
-		p[i * n_samples + i] = 0.f;
 	}
 }
 #endif // SYM_AFF_SCALAR_AVX2
