@@ -46,11 +46,13 @@ inline __m512 exp_ps(__m512 x) {
 
 inline __m512 exp_app_ps(__m512 x) {
 	// -1 <= x <= 0
-	__m512 a0 = _mm512_set1_ps(1.f);
-	__m512 a1 = _mm512_set1_ps(.93f);
-	__m512 a2 = _mm512_set1_ps(.3f);
-	__m512 y;
-	y = _mm512_fmadd_ps(a2, x, a1);
+	__m512 y,
+	a0 = _mm512_set1_ps(.9996136409397813f),
+	a1 = _mm512_set1_ps(.9920487460431511f),
+	a2 = _mm512_set1_ps(.4624692123106021f),
+	a3 = _mm512_set1_ps(.10250045262707179f);
+	y = _mm512_fmadd_ps(a3, x, a2);
+	y = _mm512_fmadd_ps(y, x, a1);
 	y = _mm512_fmadd_ps(y, x, a0);
 	return y;
 }
