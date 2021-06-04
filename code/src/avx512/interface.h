@@ -20,7 +20,7 @@ void readData(float *x, float *y, float *u, const std::string &filename, int see
 
 int getSymmetricAffinity(float *p, float *x, float *temp_3n, float perplexity, int n_samples, int d_in) {
 	s = start_tsc();
-	pre_pair_sq_dist_2x8(p, x, temp_3n, n_samples, d_in);
+	pre_pair_sq_dist(p, x, temp_3n, n_samples, d_in);
 	ta0 += stop_tsc(s);
 	s = start_tsc();
 	pre_unfold_low_tri(p, n_samples);
