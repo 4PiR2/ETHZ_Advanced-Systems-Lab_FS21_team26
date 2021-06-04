@@ -68,7 +68,7 @@ void pre_pair_sq_dist(float *p, float *x, float *temp_n, int n_samples, int d_in
 						c15 = _mm512_fmadd_ps(a1, b7, c15);
 					}
 					c = block_row_sum(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15);
-					cl = _mm512_extractf32x8_ps(c, 0);
+					cl = _mm512_castps512_ps256(c);
 					cu = _mm512_extractf32x8_ps(c, 1);
 					norma0 = _mm256_broadcast_ss(temp_n + i);
 					norma1 = _mm256_broadcast_ss(temp_n + i + 1);
@@ -119,7 +119,7 @@ int pre_perplex_bi_search(float *p, float perplexity, float epsilon, float *temp
 	float beta, beta_l, beta_r, beta_last = 0.f, h, s,
 			h_tar = logf(perplexity), h_tar_u = h_tar + epsilon, h_tar_l = h_tar - epsilon,
 			*e_m = temp_3n, *e_l = e_m + N, *e_r = e_l + N;
-	// beta = -.5f / (sigma * sigma)
+	// beta := -.5f / (sigma * sigma)
 	bool ub_l, ub_r;
 	for (int i = 0, iN = 0; i < n_samples; ++i, iN += N) {
 		dist_max = zerofs;
