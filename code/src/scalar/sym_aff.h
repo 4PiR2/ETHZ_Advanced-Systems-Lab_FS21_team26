@@ -459,11 +459,18 @@ void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 // Replace the 'expf' function call by an approximation
 #ifdef SYM_AFF_PA_SCALAR_UP3
 
-// Power series approximation (of order two) of the exponential function
-inline float exp_app(float x) {
-	float tmp = 1 + x;
-	float tmp2 = x * x * 0.5f;
-	return tmp + tmp2;
+// Approximation of the exponential function by linear regression (polynomial of order three)
+inline __m512 exp_app_ps(__m512 x) {
+	// -1 <= x <= 0
+	__m512 y,
+	a0 = _mm512_set1_ps(.9996136409397813f),
+	a1 = _mm512_set1_ps(.9920487460431511f),
+	a2 = _mm512_set1_ps(.4624692123106021f),
+	a3 = _mm512_set1_ps(.10250045262707179f);
+	y = _mm512_fmadd_ps(a3, x, a2);
+	y = _mm512_fmadd_ps(y, x, a1);
+	y = _mm512_fmadd_ps(y, x, a0);
+	return y;
 }
 
 void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
