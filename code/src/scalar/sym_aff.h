@@ -130,7 +130,7 @@ inline void avx2_dp_sum(float* x, float* y, float* ret_dp, float* ret_sum, int s
 }
 
 // deleting the exp functions
-// #define SYM_AFF_PA_SCALAR_INIT // 1.83, 2.08
+#define SYM_AFF_PA_SCALAR_INIT // 1.83, 2.08
 // deleting one branch
 // #define SYM_AFF_PA_SCALAR_UP1 // 2.33 2.62
 // deleting beta values
@@ -138,6 +138,44 @@ inline void avx2_dp_sum(float* x, float* y, float* ret_dp, float* ret_sum, int s
 // try avx2 functions
 // #define SYM_AFF_PA_AVX2 // 7.0(no-vec flag) 1.8(normal)
 // #define SYM_AFF_PA_SCALAR_CURRENT 
+
+#ifdef SYM_AFF_SQEU_DIST
+
+void getSquaredEuclideanDistances(float *x, int n_samples, int d_in, float *d) {
+	float* norms = (float*)malloc(n_samples * sizeof(float));
+	for (int i = 0; i < n_samples; i++) {
+		float tmp, tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+		tmp = tmp0 = tmp1 = tmp2 = tmp3 = tmp4 = tmp5 = tmp6 = tmp7 = 0.f;
+		int k = 0;
+		for (; k < d_in; k += 8) {
+			int id = i * d_in + k;
+			tmp0 += x[id + 0] * x[id + 0];
+			tmp1 += x[id + 1] * x[id + 1];
+			tmp2 += x[id + 2] * x[id + 2];
+			tmp3 += x[id + 3] * x[id + 3];
+			tmp4 += x[id + 4] * x[id + 4];
+			tmp5 += x[id + 5] * x[id + 5];
+			tmp6 += x[id + 6] * x[id + 6];
+			tmp7 += x[id + 7] * x[id + 7];
+		}
+
+		tmp = tmp0 + tmp1 + tmp2 + tmp3 + tmp4 + tmp5 + tmp6 + tmp7;
+		for (; k < d_in; k++) {
+			tmp += x[i * d_in + k] * x[i * d_in + k];
+		}
+		norms[i] = tmp;
+	}
+
+	for (int i = 0; i < n_samples; i++) {
+		for (int j = i + 1; j < n_samples; j++) {
+			d[i * n_samples + j] = norms[i] - 2*x[i]*x[j] + norms[j];
+		}
+	}
+
+	free(norms);
+}
+
+#else
 
 void getSquaredEuclideanDistances(float *x, int n_samples, int d_in, float *d) {
 	for (int i = 0; i < n_samples; i++) {
@@ -178,6 +216,8 @@ void getSquaredEuclideanDistances(float *x, int n_samples, int d_in, float *d) {
 		d[i * n_samples + i] = 0.f;
 	}
 }
+
+#endif //SYM_AFF_SQEU_DIST
 
 #ifdef SYM_AFF_PA_SCALAR_INIT
 
@@ -457,6 +497,7 @@ void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 #endif // SYM_AFF_SCALAR_UP2
 
 // Replace the 'expf' function call by an approximation
+// Improve stopping criteria
 #ifdef SYM_AFF_PA_SCALAR_UP3
 
 // Approximation of the exponential function by linear regression (polynomial of order three)
