@@ -168,7 +168,28 @@ void getSquaredEuclideanDistances(float *x, int n_samples, int d_in, float *d) {
 
 	for (int i = 0; i < n_samples; i++) {
 		for (int j = i + 1; j < n_samples; j++) {
-			d[i * n_samples + j] = norms[i] - 2*x[i]*x[j] + norms[j];
+			float tmp, tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+			tmp = tmp0 = tmp1 = tmp2 = tmp3 = tmp4 = tmp5 = tmp6 = tmp7 = 0.f;
+			int k = 0;
+			for (; k < d_in; k += 8) {
+				int id = i * d_in + k;
+				int jd = j * d_in + k;
+				tmp0 += x[id + 0] * x[jd + 0];
+				tmp1 += x[id + 1] * x[jd + 1];
+				tmp2 += x[id + 2] * x[jd + 2];
+				tmp3 += x[id + 3] * x[jd + 3];
+				tmp4 += x[id + 4] * x[jd + 4];
+				tmp5 += x[id + 5] * x[jd + 5];
+				tmp6 += x[id + 6] * x[jd + 6];
+				tmp7 += x[id + 7] * x[jd + 7];
+			}
+
+			tmp = tmp0 + tmp1 + tmp2 + tmp3 + tmp4 + tmp5 + tmp6 + tmp7;
+			for (; k < d_in; k++) {
+				tmp += x[i * d_in + k] * x[j * d_in + k];
+			}
+
+			d[i * n_samples + j] = norms[i] - 2*tmp + norms[j];
 		}
 	}
 
@@ -301,6 +322,8 @@ void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 			}
 		}
 	}
+	
+	free(bd_exps), free(bd_max_exps), free(bd_min_exps);
 }
 
 #endif // SYM_AFF_SCALAR_INIT
@@ -396,6 +419,8 @@ void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 		}
 		p[i * n_samples + i] = 0.f;
 	}
+
+	free(bd_exps), free(bd_max_exps), free(bd_min_exps);
 }
 
 #endif // SYM_AFF_SCALAR_UP1
@@ -493,6 +518,8 @@ void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 			
 		}
 	}
+
+	free(bd_exps), free(bd_max_exps), free(bd_min_exps), free(bds), free(bd_maxs), free(bd_mins);
 }
 #endif // SYM_AFF_SCALAR_UP2
 
@@ -605,6 +632,8 @@ void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 			
 		}
 	}
+
+	free(bd_exps), free(bd_max_exps), free(bd_min_exps), free(bds), free(bd_maxs), free(bd_mins);
 }
 #endif // SYM_AFF_SCALAR_UP3
 
@@ -688,6 +717,8 @@ void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 			
 		}
 	}
+	
+	free(bd_exps), free(bd_max_exps), free(bd_min_exps), free(bds), free(bd_maxs), free(bd_mins);
 }
 #endif // SYM_AFF_SCALAR_AVX2
 
