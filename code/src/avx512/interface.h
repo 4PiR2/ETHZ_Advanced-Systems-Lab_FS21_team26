@@ -42,10 +42,10 @@ getLowdResult(float *y, float *u, float *p, float *t, float eta, int n_iter, flo
 		t_sum = gd_pair_aff(t, y, n_samples, d_out);
 		tb0 += stop_tsc(s);
 		s = start_tsc();
-		gd_update_calc(u, y, p, t, t_sum, eta, n_samples, d_out);
+		gd_update_calc(u, y, p, t, t_sum, n_samples, d_out);
 		tb1 += stop_tsc(s);
 		s = start_tsc();
-		gd_update_apply(y, u, alpha, n_samples, d_out);
+		gd_update_apply(y, u, eta, alpha, n_samples, d_out);
 		tb2 += stop_tsc(s);
 	}
 }
