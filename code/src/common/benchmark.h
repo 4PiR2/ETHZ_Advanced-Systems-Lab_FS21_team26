@@ -80,10 +80,9 @@ static double get_duration(char *name) {
 
 inline void benchmark_print() {
 	printf("============ Print All Timers ============\n");
-	printf("%30s, %10s, %20s\n", "NAME", "REP", "AVG");
 	for (int i = 0; i < ntimers; i++) {
 		if (if_show(timers[i].name))
-			printf("%30s, %10d, %20.4lf\n", timers[i].name, timers[i].rep, (double) timers[i].accum / timers[i].rep);
+			printf("TIMER:%s,%d,%.4lf\n", timers[i].name, timers[i].rep, (double) timers[i].accum / timers[i].rep);
 	}
 	printf("============ Print All Timers End ============\n\n");
 

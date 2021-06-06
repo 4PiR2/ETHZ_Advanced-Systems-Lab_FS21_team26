@@ -8,18 +8,17 @@
 
 #include "../common/mat.h"
 #include "sym_aff.h"
+#include "sysmmetrize_aff.h"
 #include "../baseline/pre.h"
 #include "../baseline/gd.h"
 
-#define DEBUG
+// #define SCALAR_DEBUG
+// #define SCALAR_COMPARISON
 
-#define eps_baselines 1e-5f
-// C is the assertion message
-#define assertEq(A, B) assert(std::fabs((B - A) / (std::fabs(A) + 1e-7f)) <= eps_baselines)
-// #define assertEq(A,B) assert(std::fabs((B - A)) <= eps_baselines)
+#define eps_baselines 1e-2f
 
 void baselineCompare(const float *X, const float *Y, const int size) {
-#ifdef DEBUG
+#ifdef SCALAR_DEBUG
 	for (int i = 0; i < size; i++) {
 		// if (!(std::fabs(Y[i] - X[i]) <= eps_baselines)) {
 		if (std::fabs(Y[i] - X[i]) / (std::fabs(X[i]) + 1e-7f) > eps_baselines) {
@@ -36,37 +35,44 @@ void readData(float *x, float *y, const std::string &filename, int seed, int n_s
 
 void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, float *p, float *d) {
 	thandle t1 = create_timer("ED"), t2 = create_timer("_ED");
-	start(t1);
-	getSquaredEuclideanDistances(x, n_samples, d_in, d);
-	stop(t1);
-	// baseline
+
 	auto _d = mat_alloc<float>(n_samples, n_samples);
+	start(t1);
+	_getSquaredEuclideanDistances(x, n_samples, d_in, d);
+	stop(t1);
+
+	#ifdef SCALAR_COMPARISON
 	start(t2);
 	_getSquaredEuclideanDistances(x, n_samples, d_in, _d);
 	stop(t2);
 	baselineCompare(d, _d, n_samples * n_samples);
+	#endif
 
 	// compute pairwise affinities
 	t1 = create_timer("PA"), t2 = create_timer("_PA");
 	start(t1);
-	_getPairwiseAffinity(d, n_samples, perplexity, p);
+	getPairwiseAffinity(d, n_samples, perplexity, p);
 	stop(t1);
 	// baseline
+	#ifdef SCALAR_COMPARISON
 	auto _p = mat_alloc<float>(n_samples, n_samples);
 	start(t2);
 	_getPairwiseAffinity(d, n_samples, perplexity, _p);
 	stop(t2);
 	baselineCompare(p, _p, n_samples * n_samples);
+	#endif
 
 	t1 = create_timer("SA"), t2 = create_timer("_SA");
 	start(t1);
-	_symmetrizeAffinities(p, n_samples);
+	symmetrizeAffinities(p, n_samples);
 	stop(t1);
 	// baseline
+	#ifdef SCALAR_COMPARISON
 	start(t2);
 	_symmetrizeAffinities(_p, n_samples);
 	stop(t2);
 	baselineCompare(p, _p, n_samples * n_samples);
+	#endif
 }
 
 void getLowDimResult(float *y, float *u, float *g, float *p, float *t, int n_samples, int d_out, float alpha,
@@ -100,6 +106,9 @@ run(int n_samples, int d_out, int d_in, int rep, float eta, float alpha, float p
 
 		mat_store(p, n_samples, n_samples, "../output/p_matrix.txt");
 
+		memset(t, 0, sizeof(float) * n_samples * d_out);
+		memset(g, 0, sizeof(float) * n_samples * d_out);
+		memset(u, 0, sizeof(float) * n_samples * d_out);
 		start(t2);
 		getLowDimResult(y, u, g, p, t, n_samples, d_out, alpha, eta, n_iter);
 		stop(t2);

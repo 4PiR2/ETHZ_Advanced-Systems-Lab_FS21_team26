@@ -12,7 +12,8 @@ CC := g++
 # modify #define branches here
 # DEF := -Dxxx
 
-CPPFLAGS := -MMD -MP $(DEF) -O3 -march=native -ffast-math
+# CPPFLAGS := -MMD -MP $(DEF) -O3 -march=native -ffast-math
+CPPFLAGS := -MMD -MP $(DEF) -O3 -march=native -ffast-math -fno-tree-vectorize
 # To compile AVX-512 version, set -march=icelake-client flag!
 CFLAGS   := -Wall
 LDFLAGS  := -Llib
