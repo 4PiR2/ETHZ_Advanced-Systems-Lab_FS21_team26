@@ -68,7 +68,7 @@ template<typename T>
 inline void mat_rand_norm(T *p, int n, int m, T mean, T std, bool use_seed, long unsigned int seed) {
 	int M = GET_N(m, T);
 	std::random_device rd;
-	std::mt19937 gen0{rd()}, gen1{seed};
+	std::mt19937 gen0(rd()), gen1(seed);
 	std::normal_distribution<T> d(mean, std);
 	for (int i = 0, iM = 0; i < n; ++i, iM += M) {
 		for (int j = 0; j < m; ++j) {

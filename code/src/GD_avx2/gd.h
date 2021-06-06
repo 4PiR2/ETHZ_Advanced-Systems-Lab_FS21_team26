@@ -524,14 +524,14 @@ float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
 				a7 -= b;
 				c7 = _mm256_fmadd_ps(a7, a7, c7);
 			}
-			c0 = _mm256_rcp14_ps(c0);
-			c1 = _mm256_rcp14_ps(c1);
-			c2 = _mm256_rcp14_ps(c2);
-			c3 = _mm256_rcp14_ps(c3);
-			c4 = _mm256_rcp14_ps(c4);
-			c5 = _mm256_rcp14_ps(c5);
-			c6 = _mm256_rcp14_ps(c6);
-			c7 = _mm256_rcp14_ps(c7);
+			c0 = _mm256_rcp_ps(c0);
+			c1 = _mm256_rcp_ps(c1);
+			c2 = _mm256_rcp_ps(c2);
+			c3 = _mm256_rcp_ps(c3);
+			c4 = _mm256_rcp_ps(c4);
+			c5 = _mm256_rcp_ps(c5);
+			c6 = _mm256_rcp_ps(c6);
+			c7 = _mm256_rcp_ps(c7);
 			block_store(t + i * N + j, N, c0, c1, c2, c3, c4, c5, c6, c7);
 			csum = ((c0 + c1) + (c2 + c3)) + ((c4 + c5) + (c6 + c7));
 			c += csum;

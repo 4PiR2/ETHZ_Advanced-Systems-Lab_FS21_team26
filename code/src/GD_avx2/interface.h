@@ -7,8 +7,9 @@
 #include "pre.h"
 #include "gd.h"
 
-void readData(float *x, float *y, const std::string &filename, int seed, int n_samples, int d_in, int d_out) {
+void readData(float *x, float *y, float *y_trans, const std::string &filename, int seed, int n_samples, int d_in, int d_out) {
 	mat_rand_norm(y, n_samples, d_out, 0.f, 1e-4f, true, seed);
+	mat_transpose(y_trans, y, n_samples, d_out);
 	mat_load(x, n_samples, d_in, filename);
 }
 
@@ -18,12 +19,12 @@ void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, f
 	_symmetrizeAffinities(p, n_samples);
 }
 
-void getLowDimResult(float *y, float *u, float *g, float *p, float *t, int n_samples, int d_out, float alpha,
+void getLowDimResult(float *y, float *y_trans, float *u, float *g, float *p, float *t, int n_samples, int d_out, float alpha,
                      float eta, int n_iter) {
 	for (int i = 0; i < n_iter; i++) {
-		float t_sum_inv = compute_t(y, t, n_samples, d_out);
-		gradientCompute(y, g, p, t, t_sum_inv, n_samples, d_out);
-		gradientUpdate(y, u, g, n_samples, d_out, alpha, eta);
+		float t_sum = gd_pair_aff(t, y_trans, n_samples, d_out);
+		gd_update_calc(u, y, p, t, t_sum, eta, n_samples, d_out);
+		gd_update_apply(y, u, alpha, n_samples, d_out);
 	}
 }
 
@@ -37,10 +38,11 @@ run(int n_samples, int d_out, int d_in, int rep, float eta, float alpha, float p
 				p = mat_alloc<float>(n_samples, n_samples),
 				t = mat_alloc<float>(n_samples, n_samples),
 				y = mat_alloc<float>(n_samples, d_out),
+				y_trans = mat_alloc<float>(d_out, n_samples),
 				u = mat_alloc<float>(n_samples, d_out),
 				g = mat_alloc<float>(n_samples, d_out),
 				d = mat_alloc<float>(n_samples, n_samples);
-		readData(x, y, file_in, 13, n_samples, d_in, d_out);
+		readData(x, y, y_trans, file_in, 13, n_samples, d_in, d_out);
 
 		start(t1);
 		getSymmetricAffinity(x, n_samples, d_in, (float) perplexity, p, d);
@@ -49,9 +51,10 @@ run(int n_samples, int d_out, int d_in, int rep, float eta, float alpha, float p
 		mat_store(p, n_samples, n_samples, "../output/p_matrix.txt");
 
 		start(t2);
-		getLowDimResult(y, u, g, p, t, n_samples, d_out, alpha, eta, n_iter);
+		getLowDimResult(y, y_trans, u, g, p, t, n_samples, d_out, alpha, eta, n_iter);
 		stop(t2);
 
+        mat_transpose(y_trans, y, d_out, n_samples);
 		mat_store(y, n_samples, d_out, file_out);
 
 		mat_free_batch(7, x, p, t, y, u, g, d);

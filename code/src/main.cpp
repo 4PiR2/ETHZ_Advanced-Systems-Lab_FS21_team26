@@ -1,6 +1,18 @@
 #include "common/benchmark.h"
 
-#define V_SCALAR
+#define V_GD_AVX2
+
+#ifdef V_GD_SCALAR_BLOCK
+
+#include "GD_scalar_blocking/interface.h"
+
+#endif
+
+#ifdef V_GD_AVX2
+
+#include "GD_avx2/interface.h"
+
+#endif
 
 #ifdef V_BASELINE
 
