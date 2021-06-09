@@ -103,6 +103,80 @@ inline float avx2_sum_m256(__m256 x) {
     return _mm_cvtss_f32(sum);
 }
 
+// TODO Loop UnRolling...
+inline void avx2_gmean_sum_dp(float* x, float* y, float* z, float* ret, float* ret_dp, float* ret_sum, int size) {
+	__m256 sum = _mm256_setzero_ps();
+	__m256 dp = _mm256_setzero_ps();
+
+	int i;
+	for (i = 0; i + 7 < size; i += 8) {
+		__m256 a = _mm256_load_ps(x + i);
+		__m256 b = _mm256_load_ps(y + i);
+		__m256 c = _mm256_load_ps(z + i);
+
+		__m256 mul = _mm256_mul_ps(a, b);
+		__m256 sqrt = _mm256_sqrt_ps(mul);
+
+		_mm256_store_ps(ret + i, sqrt);
+		dp = _mm256_fmadd_ps(sqrt, c, dp);
+		sum = _mm256_add_ps(sum, sqrt);
+	}
+	*ret_dp = avx2_sum_m256(dp);
+	*ret_sum = avx2_sum_m256(sum);
+
+	for (; i < size; i++) {
+		ret[i] = sqrtf(x[i] * y[i]);
+		*ret_dp += ret[i] * z[i];
+		*ret_sum += ret[i];
+	}
+}
+
+inline void avx2_square_sum_dp(float* x, float* y, float* ret, float* ret_dp, float* ret_sum, int size) {
+	__m256 sum = _mm256_setzero_ps();
+	__m256 dp = _mm256_setzero_ps();
+
+	int i;
+	for (i = 0; i + 7 < size; i += 8) {
+		__m256 a = _mm256_load_ps(x + i);
+		__m256 b = _mm256_load_ps(y + i);
+		__m256 mul = _mm256_mul_ps(a, a);
+		_mm256_store_ps(ret + i, mul);
+		dp = _mm256_fmadd_ps(mul, b, dp);
+		sum = _mm256_add_ps(sum, mul);
+	}
+	*ret_dp = avx2_sum_m256(dp);
+	*ret_sum = avx2_sum_m256(sum);
+
+	for (; i < size; i++) {
+		ret[i] = x[i] * x[i];
+		*ret_dp += ret[i] * y[i];
+		*ret_sum += ret[i];
+	}
+}
+
+inline void avx2_sqrt_sum_dp(float* x, float* y, float* ret, float* ret_dp, float* ret_sum, int size) {
+	__m256 sum = _mm256_setzero_ps();
+	__m256 dp = _mm256_setzero_ps();
+
+	int i;
+	for (i = 0; i + 7 < size; i += 8) {
+		__m256 a = _mm256_load_ps(x + i);
+		__m256 b = _mm256_load_ps(y + i);
+		__m256 sqrt = _mm256_sqrt_ps(a);
+		_mm256_store_ps(ret + i, sqrt);
+		dp = _mm256_fmadd_ps(sqrt, b, dp);
+		sum = _mm256_add_ps(sum, sqrt);
+	}
+	*ret_dp = avx2_sum_m256(dp);
+	*ret_sum = avx2_sum_m256(sum);
+
+	for (; i < size; i++) {
+		ret[i] = sqrtf(x[i]);
+		*ret_dp += ret[i] * y[i];
+		*ret_sum += ret[i];
+	}
+}
+
 inline void avx2_dp_sum(float* x, float* y, float* ret_dp, float* ret_sum, int size) {
 	// dot product x, y => ret_dp
 	// sum x => ret_sum
@@ -372,28 +446,24 @@ void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 
 			if (k == 0) {
 				avx2_dp_sum(bd_exps, d + i * n_samples, &shannon_entropy, &sum, n_samples);
-
 			}
-			// printf("B: %f %f\n", sum, shannon_entropy);
 			
 			shannon_entropy = -shannon_entropy * beta / sum + logf(sum);
 			if (shannon_entropy > lb && shannon_entropy < rb) {
 				break;
 			}
-			// start(t2);
+
 			if (shannon_entropy > log_perp) {
 				swapptr(&bd_exps, &bd_min_exps);
 				beta_min = beta;
 				flag1 = false;
 				if (flag0) {
-					avx2_square(bd_min_exps, bd_exps, n_samples);
+					avx2_square_sum_dp(bd_min_exps, d + i * n_samples, bd_exps, &shannon_entropy, &sum, n_samples);
 					beta *= 2.f;
-					avx2_dp_sum(bd_exps, d + i * n_samples, &shannon_entropy, &sum, n_samples);
 				}
 				else {
-					avx2_geometric_mean(bd_min_exps, bd_max_exps, bd_exps, n_samples);
+					avx2_gmean_sum_dp(bd_min_exps, bd_max_exps, d + i * n_samples, bd_exps, &shannon_entropy, &sum, n_samples);
 					beta = (beta + beta_max) * .5f;
-					avx2_dp_sum(bd_exps, d + i * n_samples, &shannon_entropy, &sum, n_samples);
 				}
 			}
 			else {
@@ -406,12 +476,11 @@ void getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 					avx2_dp_sum(bd_exps, d + i * n_samples, &shannon_entropy, &sum, n_samples);
 				}
 				else {
-					avx2_geometric_mean(bd_min_exps, bd_max_exps, bd_exps, n_samples);
+					avx2_gmean_sum_dp(bd_min_exps, bd_max_exps, d + i * n_samples, bd_exps, &shannon_entropy, &sum, n_samples);
 					beta = (beta + beta_min) * .5f;
-					avx2_dp_sum(bd_exps, d + i * n_samples, &shannon_entropy, &sum, n_samples);
 				}
 			}
-			// stop(t2);
+
 		}
 		
 		float sum_inv = 1.f / sum;
