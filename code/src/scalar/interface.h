@@ -9,6 +9,7 @@
 #include "../common/mat.h"
 #include "sym_aff.h"
 #include "sysmmetrize_aff.h"
+#include "eucl_dist.h"
 #include "../baseline/pre.h"
 #include "../baseline/gd.h"
 
