@@ -9,11 +9,11 @@
 #include "immintrin.h"
 
 #ifndef ALIGNMENT
-#ifndef ALIGN_ELEM
-#define ALIGN_ELEM 1
-// ALIGN_ELEM: 16, 8, ..., 1
+#ifndef ALIGN_FLOAT
+#define ALIGN_FLOAT 1
+// ALIGN_FLOAT: 16, 8, ..., 1
 #endif
-#define ALIGNMENT (32 * (ALIGN_ELEM))
+#define ALIGNMENT (32 * (ALIGN_FLOAT))
 // ALIGNMENT: 512, 256, ..., sizeof(T) * 8
 #endif
 

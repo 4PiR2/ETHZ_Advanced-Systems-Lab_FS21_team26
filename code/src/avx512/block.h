@@ -83,7 +83,7 @@ inline void block_transpose(__m512 &r0, __m512 &r1, __m512 &r2, __m512 &r3,
 
 // 8x8
 inline void block_transpose(__m256 &r0, __m256 &r1, __m256 &r2, __m256 &r3,
-							__m256 &r4, __m256 &r5, __m256 &r6, __m256 &r7) {
+                            __m256 &r4, __m256 &r5, __m256 &r6, __m256 &r7) {
 	__m256 ta0, ta1, ta2, ta3, ta4, ta5, ta6, ta7, tb0, tb1, tb2, tb3, tb4, tb5, tb6, tb7;
 	ta0 = _mm256_unpacklo_ps(r0, r1);
 	ta1 = _mm256_unpackhi_ps(r0, r1);

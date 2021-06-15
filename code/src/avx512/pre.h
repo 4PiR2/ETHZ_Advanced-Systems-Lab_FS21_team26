@@ -5,7 +5,7 @@
 #include "block.h"
 #include "exp.h"
 
-void pre_pair_sq_dist(float *p, float *x, float *temp_n, int n_samples, int d_in) {
+void pre_pair_sq_dist(float *p, float *dummy0, float *x, float *temp_n, int n_samples, int d_in) {
 	__m512 a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15,
 			b0, b1, b2, b3, b4, b5, b6, b7, zerofs = _mm512_setzero_ps(),
 			c, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15;
@@ -112,7 +112,7 @@ void pre_unfold_low_tri(float *p, int n_samples) {
 	}
 }
 
-int pre_perplex_bi_search(float *p, float perplexity, float epsilon, float *temp_3n, int n_samples) {
+int pre_perplex_bi_search(float *p, float *dummy0, float perplexity, float epsilon, float *temp_3n, int n_samples) {
 	__m512 dist, dist_max, e, el, er, betas, sum_e, nsum_ed, ss, zerofs = _mm512_setzero_ps();
 	__mmask16 mask;
 	int N = (n_samples + 15) & (-1 ^ 15), mode, iter, count = 0;
@@ -130,7 +130,9 @@ int pre_perplex_bi_search(float *p, float perplexity, float epsilon, float *temp
 		beta = -1.f / _mm512_reduce_max_ps(dist_max);
 		mode = 0;
 		ub_l = ub_r = true;
-		for (iter = 1; beta != beta_last; ++iter) {
+		iter = 0;
+		while (beta != beta_last) {
+			++iter;
 			beta_last = beta;
 			sum_e = nsum_ed = zerofs;
 			for (int j = 0; j < N; j += 16) {

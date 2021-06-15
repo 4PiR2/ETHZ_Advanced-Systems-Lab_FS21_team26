@@ -3,13 +3,7 @@
 
 #include <cmath>
 
-// define the maximum number of iterations to fit the perplexity
-int MAX_ITERATIONS = 200;
-
-// define the error tolerance for the perplexity
-float ERROR_TOLERANCE = 1e-5f;
-
-void _getSquaredEuclideanDistances(float *x, int n_samples, int d_in, float *d) {
+void pre_pair_sq_dist(float *dummy0, float *d, float *x, float *dummy1, int n_samples, int d_in) {
 	for (int i = 0; i < n_samples; i++) {
 		d[i * n_samples + i] = 0.f;
 		for (int j = i + 1; j < n_samples; j++) {
@@ -24,8 +18,11 @@ void _getSquaredEuclideanDistances(float *x, int n_samples, int d_in, float *d) 
 	}
 }
 
-void _getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
-	float log_perp = logf(perplexity), lb = log_perp - ERROR_TOLERANCE, rb = log_perp + ERROR_TOLERANCE;
+void pre_unfold_low_tri(float *dummy0, int dummy1) {}
+
+int pre_perplex_bi_search(float *p, float *d, float perplexity, float epsilon, float *dummy0, int n_samples) {
+	float log_perp = logf(perplexity), lb = log_perp - epsilon, rb = log_perp + epsilon;
+	int iter, count = 0;
 	// compute affinities row by row
 	for (int i = 0; i < n_samples; i++) {
 		float maxv = std::numeric_limits<float>::min();
@@ -36,11 +33,14 @@ void _getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 			}
 		}
 		// initialize beta values, beta := -.5f / (sigma * sigma)
-		float beta = -1.f / maxv, beta_max, beta_min, sum;
+		float beta = -1.f / maxv, beta_max, beta_min, beta_last = 0.f, sum;
 		bool flag0 = true, flag1 = true;
 		// perform binary search to find the optimal beta values for each data point
-		for (int k = 0; k < MAX_ITERATIONS; ++k) {
+		iter = 0;
+		while (beta != beta_last) {
 			// compute the conditional Gaussian densities for point i
+			++iter;
+			beta_last = beta;
 			sum = 0.f;
 			float shannon_entropy = 0.f;
 			for (int j = 0; j < n_samples; j++) {
@@ -81,10 +81,12 @@ void _getPairwiseAffinity(float *d, int n_samples, float perplexity, float *p) {
 			}
 		}
 		p[i * n_samples + i] = 0.f;
+		count += iter;
 	}
+	return count;
 }
 
-void _symmetrizeAffinities(float *p, int n_samples) {
+void pre_sym_aff(float *p, int n_samples) {
 	auto p_sum_inv = .5f / float(n_samples);
 	for (int i = 0; i < n_samples; i++) {
 		for (int j = i + 1; j < n_samples; j++) {
