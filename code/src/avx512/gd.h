@@ -4,8 +4,6 @@
 #include "block.h"
 
 float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
-	// t: lower 16-blocked triangle, diag elem = 1, margin = 0
-	// output: sum of matrix without diag
 	__m512i idx, ones = _mm512_set1_epi32(1);
 	__m512 b, a, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, zerofs = _mm512_setzero_ps(),
 			c = zerofs, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, csum, csub0 = zerofs,
@@ -135,7 +133,6 @@ float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
 }
 
 void gd_update_calc(float *u, float *dummy0, float *y, float *p, float *t, float t_sum_inv, int n_samples, int d_out) {
-	// p: lower 16-blocked triangle
 	__m512i idx, ones = _mm512_set1_epi32(1);
 	__m512 b, a, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, ui, uj, csum, rsum,
 			p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15,

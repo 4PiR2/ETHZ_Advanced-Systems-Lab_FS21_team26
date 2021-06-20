@@ -1,6 +1,6 @@
 import numpy as np
 
-n_samples = 500
+n_samples = 100
 d_in = 784
 
 x = np.loadtxt('../datasets/mnist/mnist_data_70kx784.txt', max_rows=n_samples)[:, :d_in]
@@ -9,6 +9,8 @@ p = np.zeros((n_samples, n_samples))
 for i in range(n_samples):
 	for j in range(n_samples):
 		p[i][j] = np.sum((x[i] - x[j]) ** 2)
+
+# np.savetxt('../output/d_tar.txt', p, delimiter='\t')
 
 perp_tar = 50
 # beta := -1 / (2 * sigma^2)
@@ -64,7 +66,11 @@ for i in range(n_samples):
 
 count /= n_samples
 
+# np.savetxt('../output/p_tar.txt', p, delimiter='\t')
+
 p = (p + p.T) / (2 * n_samples)
+
+np.savetxt('../output/ps_tar.txt', p, delimiter='\t')
 
 mat_target = p
 mat_test = np.loadtxt('output_matrix.txt')

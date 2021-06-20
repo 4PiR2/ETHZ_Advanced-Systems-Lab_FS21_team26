@@ -97,17 +97,14 @@ void pre_unfold_low_tri(float *p, int n_samples) {
 	int N = (n_samples + 15) & (-1 ^ 15);
 	for (int i = 16, iN = i * N; i < N; i += 16, iN += N * 16) {
 		for (int j = 0, jN = 0; j < i; j += 16, jN += N * 16) {
-			block_load(p + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
+			block_load_transpose(p + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
 			           r8, r9, r10, r11, r12, r13, r14, r15);
-			block_transpose(r0, r1, r2, r3, r4, r5, r6, r7,
-			                r8, r9, r10, r11, r12, r13, r14, r15);
 			block_store(p + jN + i, N, r0, r1, r2, r3, r4, r5, r6, r7,
 			            r8, r9, r10, r11, r12, r13, r14, r15);
 		}
 	}
 	for (int i = 8, iN = i * N; i < N - 8; i += 16, iN += N * 16) {
-		block_load(p + iN + i - 8, N, rr0, rr1, rr2, rr3, rr4, rr5, rr6, rr7);
-		block_transpose(rr0, rr1, rr2, rr3, rr4, rr5, rr6, rr7);
+		block_load_transpose(p + iN + i - 8, N, rr0, rr1, rr2, rr3, rr4, rr5, rr6, rr7);
 		block_store(p + iN - N * 8 + i, N, rr0, rr1, rr2, rr3, rr4, rr5, rr6, rr7);
 	}
 }
@@ -207,10 +204,8 @@ void pre_sym_aff(float *p, int n_samples) {
 	int N = (n_samples + 15) & (-1 ^ 15);
 	for (int i = 0, iN = i * N; i < N; i += 16, iN += N * 16) {
 		for (int j = 0, jN = 0; j <= i; j += 16, jN += N * 16) {
-			block_load(p + jN + i, N, c0, c1, c2, c3, c4, c5, c6, c7,
+			block_load_transpose(p + jN + i, N, c0, c1, c2, c3, c4, c5, c6, c7,
 			           c8, c9, c10, c11, c12, c13, c14, c15);
-			block_transpose(c0, c1, c2, c3, c4, c5, c6, c7,
-			                c8, c9, c10, c11, c12, c13, c14, c15);
 			block_load(p + iN + j, N, r0, r1, r2, r3, r4, r5, r6, r7,
 			           r8, r9, r10, r11, r12, r13, r14, r15);
 			r0 = (r0 + c0) * k;
