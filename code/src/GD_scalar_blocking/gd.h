@@ -37,7 +37,7 @@ float compute_t_trans(float *y_trans, float *t, int n_samples, int d_out) {
 	return .5f / sum_t;
 }
 
-//do padding for y_trans and t 
+//do padding for y_trans and t when necessary
 float compute_t_trans_block(float *y_trans, float *t, int n_samples, int d_out) {
 	float sum_t = 0.f;
 
@@ -217,7 +217,21 @@ void gradientCompute_trans(float *y_trans, float *g, float *p, float *t, float t
 	}
 }
 
-//change to t_sum_inv to t_sum_inv_m
+/*
+void gradientCompute_trans(float *y_trans, float *g, float *p, float *t, float t_sum_inv, int n_samples, int d_out) {
+	for (int j = 0; j < n_samples; j++) {
+		for (int i = j + 1; i < n_samples; i++) {
+			float t_ij = t[i * n_samples + j], c_ij = (p[i * n_samples + j] - t_ij * t_sum_inv) * t_ij;
+			for (int k = 0; k < d_out; k++) {
+				float g_ijk = (y_trans[k * n_samples + i] - y_trans[k * n_samples + j]) * c_ij;
+				g[k * n_samples + i] += g_ijk;
+				g[k * n_samples + j] -= g_ijk;
+			}
+		}
+	}
+}
+*/
+
 void gradientCompute_trans_block(float *y_trans, float *g, float *p, float *t, float t_sum_inv, int n_samples, int d_out) {
 	for (int j = 0; j < n_samples; j+=4) {
 		float t_ij01 = t[(j+1) * n_samples + j], t_ij02 = t[(j+2) * n_samples + j], t_ij03 = t[(j+2) * n_samples + j + 1], 
@@ -264,12 +278,12 @@ void gradientCompute_trans_block(float *y_trans, float *g, float *p, float *t, f
 			g[k * n_samples + j + 2] += g_ijk02 + g_ijk03;
 			g[k * n_samples + j + 3] += g_ijk04 + g_ijk05 + g_ijk06;
 
-			g[k * n_samples + j] -= g_ijk01;
-			g[k * n_samples + j] -= g_ijk02 + g_ijk04;
-			g[k * n_samples + j + 1] -= g_ijk03 + g_ijk05 + g_ijk06;
+			g[k * n_samples + j] -= g_ijk01 + g_ijk02 + g_ijk04;
+			g[k * n_samples + j + 1] -= g_ijk03 + g_ijk05;
+			g[k * n_samples + j + 2] -= g_ijk06;
 		}
 
-		for (int i = j + 1; j < n_samples; j+=4) {
+		for (int i = j + 4; i < n_samples; i+=4) {
 			float t_ij1 = t[i * n_samples + j], t_ij2 = t[i * n_samples + j + 1], t_ij3 = t[i * n_samples + j + 2], t_ij4 = t[i * n_samples + j + 3],
 			      t_ij5 = t[(i + 1) * n_samples + j], t_ij6 = t[(i + 1) * n_samples + j + 1], t_ij7 = t[(i + 1) * n_samples + j + 2], t_ij8 = t[(i + 1) * n_samples + j + 3],
 				  t_ij9 = t[(i + 2) * n_samples + j], t_ij10 = t[(i + 2) * n_samples + j + 1], t_ij11 = t[(i + 2) * n_samples + j + 2], t_ij12 = t[(i + 2) * n_samples + j + 3],
@@ -437,8 +451,8 @@ void gradientUpdate_trans_block(float *y_trans, float *u, float *g, int n_sample
 			float g_ik1 = g[k * n_samples + i], g_ik2 = g[k * n_samples + i + 1],
 			      g_ik3 = g[k * n_samples + i + 2], g_ik4 = g[k * n_samples + i + 3];
 
-			float u_ik01 = u[k * n_samples + i], u_ik02 = g[k * n_samples + i + 1],
-			      u_ik03 = u[k * n_samples + i + 2], u_ik04 = g[k * n_samples + i + 3];
+			float u_ik01 = u[k * n_samples + i], u_ik02 = u[k * n_samples + i + 1],
+			      u_ik03 = u[k * n_samples + i + 2], u_ik04 = u[k * n_samples + i + 3];
 
 			float u_ik1 = eta * g_ik1;
 			float u_ik2 = eta * g_ik2;
@@ -476,8 +490,8 @@ void gradientUpdate_trans_block(float *y_trans, float *u, float *g, int n_sample
 			float g_ik1 = g[k * n_samples + i], g_ik2 = g[k * n_samples + i + 1],
 			      g_ik3 = g[k * n_samples + i + 2], g_ik4 = g[k * n_samples + i + 3];
 
-			float u_ik01 = u[k * n_samples + i], u_ik02 = g[k * n_samples + i + 1],
-			      u_ik03 = u[k * n_samples + i + 2], u_ik04 = g[k * n_samples + i + 3];
+			float u_ik01 = u[k * n_samples + i], u_ik02 = u[k * n_samples + i + 1],
+			      u_ik03 = u[k * n_samples + i + 2], u_ik04 = u[k * n_samples + i + 3];
 
 			float u_ik1 = eta * g_ik1;
 			float u_ik2 = eta * g_ik2;

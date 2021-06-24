@@ -39,7 +39,7 @@ float compute_t_trans(float *y_trans, float *t, int n_samples, int d_out) {
 	return .5f / sum_t;
 }
 
-//do padding for y_trans and t 
+//do padding for y_trans and t when necessary
 float compute_t_trans_block(float *y_trans, float *t, int n_samples, int d_out) {
 	float sum_t = 0.f;
 
@@ -72,12 +72,12 @@ float compute_t_trans_block(float *y_trans, float *t, int n_samples, int d_out) 
 		float aff05 = 1.f / dist05;
 		float aff06 = 1.f / dist06;
 
-		t[(j+1) * n_samples + j] = t[j * n_samples + j + 1] = aff01;
-		t[(j+2) * n_samples + j] = t[j * n_samples + j + 2] = aff02;
-		t[(j+3) * n_samples + j] = t[j * n_samples + j + 3] = aff03;
-		t[(j+2) * n_samples + j + 1] = t[(j+1) * n_samples + j + 2] = aff04;
-		t[(j+3) * n_samples + j + 1] = t[(j+1) * n_samples + j + 3] = aff05;
-		t[(j+3) * n_samples + j + 2] = t[(j+2) * n_samples + j + 3] = aff06;
+		t[(j+1) * n_samples + j] = aff01;
+		t[(j+2) * n_samples + j] = aff02;
+		t[(j+3) * n_samples + j] = aff03;
+		t[(j+2) * n_samples + j + 1] = aff04;
+		t[(j+3) * n_samples + j + 1] = aff05;
+		t[(j+3) * n_samples + j + 2] = aff06;
 
 		sum_t += aff01;
 		sum_t += aff02;
@@ -147,25 +147,25 @@ float compute_t_trans_block(float *y_trans, float *t, int n_samples, int d_out) 
 			float aff15 = 1.f / dist15;
 			float aff16 = 1.f / dist16;
 
-			t[i * n_samples + j] = t[j * n_samples + i] = aff1;
-			t[i * n_samples + j + 1] = t[(j+1) * n_samples + i] = aff2;
-			t[i * n_samples + j + 2] = t[(j+2) * n_samples + i] = aff3;
-			t[i * n_samples + j + 3] = t[(j+3) * n_samples + i] = aff4;
+			t[i * n_samples + j] = aff1;
+			t[i * n_samples + j + 1] = aff2;
+			t[i * n_samples + j + 2] = aff3;
+			t[i * n_samples + j + 3] = aff4;
 
-			t[(i+1) * n_samples + j] = t[j * n_samples + i + 1] = aff5;
-			t[(i+1) * n_samples + j + 1] = t[(j+1) * n_samples + i + 1] = aff6;
-			t[(i+1) * n_samples + j + 2] = t[(j+2) * n_samples + i + 1] = aff7;
-			t[(i+1) * n_samples + j + 3] = t[(j+3) * n_samples + i + 1] = aff8;
+			t[(i+1) * n_samples + j] = aff5;
+			t[(i+1) * n_samples + j + 1] = aff6;
+			t[(i+1) * n_samples + j + 2] = aff7;
+			t[(i+1) * n_samples + j + 3] = aff8;
 
-			t[(i+2) * n_samples + j] = t[j * n_samples + i + 2] = aff9;
-			t[(i+2) * n_samples + j + 1] = t[(j+1) * n_samples + i + 2] = aff10;
-			t[(i+2) * n_samples + j + 2] = t[(j+2) * n_samples + i + 2] = aff11;
-			t[(i+2) * n_samples + j + 3] = t[(j+3) * n_samples + i + 2] = aff12;
+			t[(i+2) * n_samples + j] = aff9;
+			t[(i+2) * n_samples + j + 1] = aff10;
+			t[(i+2) * n_samples + j + 2] = aff11;
+			t[(i+2) * n_samples + j + 3] = aff12;
 
-			t[(i+3) * n_samples + j] = t[j * n_samples + i + 3] = aff13;
-			t[(i+3) * n_samples + j + 1] = t[(j+1) * n_samples + i + 3] = aff14;
-			t[(i+3) * n_samples + j + 2] = t[(j+2) * n_samples + i + 3] = aff15;
-			t[(i+3) * n_samples + j + 3] = t[(j+3) * n_samples + i + 3] = aff16;
+			t[(i+3) * n_samples + j] = aff13;
+			t[(i+3) * n_samples + j + 1] = aff14;
+			t[(i+3) * n_samples + j + 2] = aff15;
+			t[(i+3) * n_samples + j + 3] = aff16;
 
 			sum_t += aff1;
 			sum_t += aff2;
@@ -219,8 +219,22 @@ void gradientCompute_trans(float *y_trans, float *g, float *p, float *t, float t
 	}
 }
 
-//change to t_sum_inv to t_sum_inv_m
-void gradientCompute_trans_block(float *y_trans, float *g, float *p, float *t, float t_sum_inv_m, int n_samples, int d_out) {
+/*
+void gradientCompute_trans(float *y_trans, float *g, float *p, float *t, float t_sum_inv, int n_samples, int d_out) {
+	for (int j = 0; j < n_samples; j++) {
+		for (int i = j + 1; i < n_samples; i++) {
+			float t_ij = t[i * n_samples + j], c_ij = (p[i * n_samples + j] - t_ij * t_sum_inv) * t_ij;
+			for (int k = 0; k < d_out; k++) {
+				float g_ijk = (y_trans[k * n_samples + i] - y_trans[k * n_samples + j]) * c_ij;
+				g[k * n_samples + i] += g_ijk;
+				g[k * n_samples + j] -= g_ijk;
+			}
+		}
+	}
+}
+*/
+
+void gradientCompute_trans_block(float *y_trans, float *g, float *p, float *t, float t_sum_inv, int n_samples, int d_out) {
 	for (int j = 0; j < n_samples; j+=4) {
 		float t_ij01 = t[(j+1) * n_samples + j], t_ij02 = t[(j+2) * n_samples + j], t_ij03 = t[(j+2) * n_samples + j + 1], 
 		      t_ij04 = t[(j+3) * n_samples + j], t_ij05 = t[(j+3) * n_samples + j + 1], t_ij06 = t[(j+3) * n_samples + j + 2];
@@ -231,12 +245,12 @@ void gradientCompute_trans_block(float *y_trans, float *g, float *p, float *t, f
 		float c_ij01 = p_ij01, c_ij02 = p_ij02, c_ij03 = p_ij03, 
 		      c_ij04 = p_ij04, c_ij05 = p_ij05, c_ij06 = p_ij06;
 
-		c_ij01 += t_ij01 * t_sum_inv_m;
-		c_ij02 += t_ij02 * t_sum_inv_m;
-		c_ij03 += t_ij03 * t_sum_inv_m;
-		c_ij04 += t_ij04 * t_sum_inv_m;
-		c_ij05 += t_ij05 * t_sum_inv_m;
-		c_ij06 += t_ij06 * t_sum_inv_m;
+		c_ij01 -= t_ij01 * t_sum_inv;
+		c_ij02 -= t_ij02 * t_sum_inv;
+		c_ij03 -= t_ij03 * t_sum_inv;
+		c_ij04 -= t_ij04 * t_sum_inv;
+		c_ij05 -= t_ij05 * t_sum_inv;
+		c_ij06 -= t_ij06 * t_sum_inv;
 
 		c_ij01 *= t_ij01;
 		c_ij02 *= t_ij02;
@@ -263,21 +277,15 @@ void gradientCompute_trans_block(float *y_trans, float *g, float *p, float *t, f
 			g_ijk06 *= c_ij06;
 
 			g[k * n_samples + j + 1] += g_ijk01;
-			g[k * n_samples + j + 2] += g_ijk02;
-			g[k * n_samples + j + 2] += g_ijk03;
-			g[k * n_samples + j + 3] += g_ijk04;
-			g[k * n_samples + j + 3] += g_ijk05;
-			g[k * n_samples + j + 3] += g_ijk06;
+			g[k * n_samples + j + 2] += g_ijk02 + g_ijk03;
+			g[k * n_samples + j + 3] += g_ijk04 + g_ijk05 + g_ijk06;
 
-			g[k * n_samples + j] -= g_ijk01;
-			g[k * n_samples + j] -= g_ijk02;
-			g[k * n_samples + j] -= g_ijk04;
-			g[k * n_samples + j + 1] -= g_ijk03;
-			g[k * n_samples + j + 1] -= g_ijk05;
+			g[k * n_samples + j] -= g_ijk01 + g_ijk02 + g_ijk04;
+			g[k * n_samples + j + 1] -= g_ijk03 + g_ijk05;
 			g[k * n_samples + j + 2] -= g_ijk06;
 		}
 
-		for (int i = j + 1; j < n_samples; j+=4) {
+		for (int i = j + 4; i < n_samples; i+=4) {
 			float t_ij1 = t[i * n_samples + j], t_ij2 = t[i * n_samples + j + 1], t_ij3 = t[i * n_samples + j + 2], t_ij4 = t[i * n_samples + j + 3],
 			      t_ij5 = t[(i + 1) * n_samples + j], t_ij6 = t[(i + 1) * n_samples + j + 1], t_ij7 = t[(i + 1) * n_samples + j + 2], t_ij8 = t[(i + 1) * n_samples + j + 3],
 				  t_ij9 = t[(i + 2) * n_samples + j], t_ij10 = t[(i + 2) * n_samples + j + 1], t_ij11 = t[(i + 2) * n_samples + j + 2], t_ij12 = t[(i + 2) * n_samples + j + 3],
@@ -293,22 +301,22 @@ void gradientCompute_trans_block(float *y_trans, float *g, float *p, float *t, f
 				  c_ij9 = p_ij9, c_ij10 = p_ij10, c_ij11 = p_ij11, c_ij12 = p_ij12,
 				  c_ij13 = p_ij13, c_ij14 = p_ij14, c_ij15 = p_ij15, c_ij16 = p_ij16;
 			
-			c_ij1 += t_ij1 * t_sum_inv_m;
-			c_ij2 += t_ij2 * t_sum_inv_m;
-			c_ij3 += t_ij3 * t_sum_inv_m;
-			c_ij4 += t_ij4 * t_sum_inv_m;
-			c_ij5 += t_ij5 * t_sum_inv_m;
-			c_ij6 += t_ij6 * t_sum_inv_m;
-			c_ij7 += t_ij7 * t_sum_inv_m;
-			c_ij8 += t_ij8 * t_sum_inv_m;
-			c_ij9 += t_ij9 * t_sum_inv_m;
-			c_ij10 += t_ij10 * t_sum_inv_m;
-			c_ij11 += t_ij11 * t_sum_inv_m;
-			c_ij12 += t_ij12 * t_sum_inv_m;
-			c_ij13 += t_ij13 * t_sum_inv_m;
-			c_ij14 += t_ij14 * t_sum_inv_m;
-			c_ij15 += t_ij15 * t_sum_inv_m;
-			c_ij16 += t_ij16 * t_sum_inv_m;
+			c_ij1 -= t_ij1 * t_sum_inv;
+			c_ij2 -= t_ij2 * t_sum_inv;
+			c_ij3 -= t_ij3 * t_sum_inv;
+			c_ij4 -= t_ij4 * t_sum_inv;
+			c_ij5 -= t_ij5 * t_sum_inv;
+			c_ij6 -= t_ij6 * t_sum_inv;
+			c_ij7 -= t_ij7 * t_sum_inv;
+			c_ij8 -= t_ij8 * t_sum_inv;
+			c_ij9 -= t_ij9 * t_sum_inv;
+			c_ij10 -= t_ij10 * t_sum_inv;
+			c_ij11 -= t_ij11 * t_sum_inv;
+			c_ij12 -= t_ij12 * t_sum_inv;
+			c_ij13 -= t_ij13 * t_sum_inv;
+			c_ij14 -= t_ij14 * t_sum_inv;
+			c_ij15 -= t_ij15 * t_sum_inv;
+			c_ij16 -= t_ij16 * t_sum_inv;
 
 			c_ij1 *= t_ij1;
 			c_ij2 *= t_ij2;
@@ -369,45 +377,45 @@ void gradientCompute_trans_block(float *y_trans, float *g, float *p, float *t, f
 				g_ijk15 *= c_ij15;
 				g_ijk16 *= c_ij16;
 
-				g[k * n_samples + i] += g_ijk1;
-				g[k * n_samples + i] += g_ijk2;
-				g[k * n_samples + i] += g_ijk3;
-				g[k * n_samples + i] += g_ijk4;
+				g[k * n_samples + i] += g_ijk1 + g_ijk2 + g_ijk3 + g_ijk4;
+				//g[k * n_samples + i] += g_ijk2;
+				//g[k * n_samples + i] += g_ijk3;
+				//g[k * n_samples + i] += g_ijk4;
 
-				g[k * n_samples + i + 1] += g_ijk5;
-				g[k * n_samples + i + 1] += g_ijk6;
-				g[k * n_samples + i + 1] += g_ijk7;
-				g[k * n_samples + i + 1] += g_ijk8;
+				g[k * n_samples + i + 1] += g_ijk5 + g_ijk6 + g_ijk7 + g_ijk8;
+				//g[k * n_samples + i + 1] += g_ijk6;
+				//g[k * n_samples + i + 1] += g_ijk7;
+				//g[k * n_samples + i + 1] += g_ijk8;
 
-				g[k * n_samples + i + 2] += g_ijk9;
-				g[k * n_samples + i + 2] += g_ijk10;
-				g[k * n_samples + i + 2] += g_ijk11;
-				g[k * n_samples + i + 2] += g_ijk12;
+				g[k * n_samples + i + 2] += g_ijk9 + g_ijk10 + g_ijk11 + g_ijk12;
+				//g[k * n_samples + i + 2] += g_ijk10;
+				//g[k * n_samples + i + 2] += g_ijk11;
+				//g[k * n_samples + i + 2] += g_ijk12;
 
-				g[k * n_samples + i + 3] += g_ijk13;
-				g[k * n_samples + i + 3] += g_ijk14;
-				g[k * n_samples + i + 3] += g_ijk15;
-				g[k * n_samples + i + 3] += g_ijk16;
+				g[k * n_samples + i + 3] += g_ijk13 + g_ijk14 + g_ijk15 + g_ijk16;
+				//g[k * n_samples + i + 3] += g_ijk14;
+				//g[k * n_samples + i + 3] += g_ijk15;
+				//g[k * n_samples + i + 3] += g_ijk16;
 
-				g[k * n_samples + j] -= g_ijk1;
-				g[k * n_samples + j] -= g_ijk5;
-				g[k * n_samples + j] -= g_ijk9;
-				g[k * n_samples + j] -= g_ijk13;
+				g[k * n_samples + j] -= g_ijk1 + g_ijk5 + g_ijk9 + g_ijk13;
+				//g[k * n_samples + j] -= g_ijk5;
+				//g[k * n_samples + j] -= g_ijk9;
+				//g[k * n_samples + j] -= g_ijk13;
 
-				g[k * n_samples + j + 1] -= g_ijk2;
-				g[k * n_samples + j + 1] -= g_ijk6;
-				g[k * n_samples + j + 1] -= g_ijk10;
-				g[k * n_samples + j + 1] -= g_ijk14;
+				g[k * n_samples + j + 1] -= g_ijk2 +g_ijk6 + g_ijk10 + g_ijk14;
+				//g[k * n_samples + j + 1] -= g_ijk6;
+				//g[k * n_samples + j + 1] -= g_ijk10;
+				//g[k * n_samples + j + 1] -= g_ijk14;
 
-				g[k * n_samples + j + 2] -= g_ijk3;
-				g[k * n_samples + j + 2] -= g_ijk7;
-				g[k * n_samples + j + 2] -= g_ijk11;
-				g[k * n_samples + j + 2] -= g_ijk15;
+				g[k * n_samples + j + 2] -= g_ijk3 + g_ijk7 + g_ijk11 + g_ijk15;
+				//g[k * n_samples + j + 2] -= g_ijk7;
+				//g[k * n_samples + j + 2] -= g_ijk11;
+				//g[k * n_samples + j + 2] -= g_ijk15;
 
-				g[k * n_samples + j + 3] -= g_ijk4;
-				g[k * n_samples + j + 3] -= g_ijk8;
-				g[k * n_samples + j + 3] -= g_ijk12;
-				g[k * n_samples + j + 3] -= g_ijk16;
+				g[k * n_samples + j + 3] -= g_ijk4 + g_ijk8 + g_ijk12 + g_ijk16;
+				//g[k * n_samples + j + 3] -= g_ijk8;
+				//g[k * n_samples + j + 3] -= g_ijk12;
+				//g[k * n_samples + j + 3] -= g_ijk16;
 			}
 		}
 	}
@@ -437,7 +445,7 @@ void gradientUpdate_trans(float *y_trans, float *u, float *g, int n_samples, int
 	}
 }
 
-
+/*
 void gradientUpdate_trans_block(float *y_trans, float *u, float *g, int n_samples, int d_out, float alpha, float eta) {
 	eta *= -4.f;
 	for (int i = 0; i < n_samples; i+=4) {
@@ -445,8 +453,47 @@ void gradientUpdate_trans_block(float *y_trans, float *u, float *g, int n_sample
 			float g_ik1 = g[k * n_samples + i], g_ik2 = g[k * n_samples + i + 1],
 			      g_ik3 = g[k * n_samples + i + 2], g_ik4 = g[k * n_samples + i + 3];
 
-			float u_ik01 = u[k * n_samples + i], u_ik02 = g[k * n_samples + i + 1],
-			      u_ik03 = u[k * n_samples + i + 2], u_ik04 = g[k * n_samples + i + 3];
+			float u_ik01 = u[k * n_samples + i], u_ik02 = u[k * n_samples + i + 1],
+			      u_ik03 = u[k * n_samples + i + 2], u_ik04 = u[k * n_samples + i + 3];
+
+			float u_ik1 = eta * g_ik1;
+			float u_ik2 = eta * g_ik2;
+			float u_ik3 = eta * g_ik3;
+			float u_ik4 = eta * g_ik4;
+			
+			u_ik1 += alpha * u_ik01;
+			u_ik2 += alpha * u_ik02;
+			u_ik3 += alpha * u_ik03;
+			u_ik4 += alpha * u_ik04;
+
+			u[k * n_samples + i] = u_ik1;
+			u[k * n_samples + i + 1] = u_ik2;
+			u[k * n_samples + i + 2] = u_ik3;
+			u[k * n_samples + i + 3] = u_ik4;
+
+			y_trans[k * n_samples + i] += u_ik1;
+			y_trans[k * n_samples + i + 1] += u_ik2;
+			y_trans[k * n_samples + i + 2] += u_ik3;
+			y_trans[k * n_samples + i + 3] += u_ik4;
+
+			g[k * n_samples + i] = 0.f;
+			g[k * n_samples + i + 1] = 0.f;
+			g[k * n_samples + i + 2] = 0.f;
+			g[k * n_samples + i + 3] = 0.f;
+		}
+	}
+}
+*/
+
+void gradientUpdate_trans_block(float *y_trans, float *u, float *g, int n_samples, int d_out, float alpha, float eta) {
+	eta *= -4.f;
+	for (int k = 0; k < d_out; k++) {
+	    for (int i = 0; i < n_samples; i+=4) {
+			float g_ik1 = g[k * n_samples + i], g_ik2 = g[k * n_samples + i + 1],
+			      g_ik3 = g[k * n_samples + i + 2], g_ik4 = g[k * n_samples + i + 3];
+
+			float u_ik01 = u[k * n_samples + i], u_ik02 = u[k * n_samples + i + 1],
+			      u_ik03 = u[k * n_samples + i + 2], u_ik04 = u[k * n_samples + i + 3];
 
 			float u_ik1 = eta * g_ik1;
 			float u_ik2 = eta * g_ik2;
@@ -477,8 +524,6 @@ void gradientUpdate_trans_block(float *y_trans, float *u, float *g, int n_sample
 }
 
 float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
-	// t: lower 8-blocked triangle, diag elem = 1, margin = 0
-	// output: sum of matrix without diag
 	__m256i idx, ones = _mm256_set1_epi32(1);
 	__m256  zerofs = _mm256_setzero_ps(), onefs = (__m256) _mm256_set1_epi32(0x3f800000), //float 1.0
 	        a, a0, a1, a2, a3, a4, a5, a6, a7, b,
@@ -563,11 +608,10 @@ float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
 	csub0 = (csub0 + csub1) + (csub2 + csub3);
 	c = _mm256_fnmadd_ps(csub0, onefs + onefs, c);
 
-	return ((c[0] + c[1]) + (c[2] + c[3])) + ((c[4] + c[5]) + (c[6] + c[7])) + (float) ((N - n_samples) * (N - n_samples) - n_samples);//no such function
+	return ((c[0] + c[1]) + (c[2] + c[3])) + ((c[4] + c[5]) + (c[6] + c[7])) + (float) ((N - n_samples) * (N - n_samples) - n_samples);
 }
 
 void gd_update_calc(float *u, float *y, float *p, float *t, float t_sum, float eta, int n_samples, int d_out) {
-	// p: lower 16-blocked triangle
 	__m256i idx, ones = _mm256_set1_epi32(1);
 	__m256  a, a0, a1, a2, a3, a4, a5, a6, a7,
 			p0, p1, p2, p3, p4, p5, p6, p7,
@@ -641,7 +685,7 @@ void gd_update_apply(float *y, float *u, float alpha, int n_samples, int d_out) 
 	int N = (n_samples + 7) & (-1 ^ 7);
 	__m256 yi, ui, alphas = _mm256_set1_ps(alpha);
 	for (int k = 0, kN = 0; k < d_out; ++k, kN += N) {
-		for (int i = 0; i < N; i += 16) {
+		for (int i = 0; i < N; i += 8) {
 			yi = _mm256_load_ps(y + kN + i);
 			ui = _mm256_load_ps(u + kN + i);
 			yi += ui;

@@ -7,10 +7,11 @@
 #include "pre.h"
 #include "gd.h"
 
-void readData(float *x, float *y, float *y_trans, const std::string &filename, int seed, int n_samples, int d_in, int d_out) {
+void readData(float *x, float *y, float *y_trans, const std::string &filename, int seed, int n_samples, int d_in, int d_out, float *u_trans) {
 	mat_rand_norm(y, n_samples, d_out, 0.f, 1e-4f, true, seed);
 	mat_transpose(y_trans, y, n_samples, d_out);
 	mat_load(x, n_samples, d_in, filename);
+	mat_clear(u_trans, d_out, n_samples);
 }
 
 void getSymmetricAffinity(float *x, int n_samples, int d_in, float perplexity, float *p, float *d) {
@@ -23,8 +24,8 @@ void getLowDimResult(float *y, float *y_trans, float *u, float *g, float *p, flo
                      float eta, int n_iter) {
 	for (int i = 0; i < n_iter; i++) {
 		float t_sum = gd_pair_aff(t, y_trans, n_samples, d_out);
-		gd_update_calc(u, y, p, t, t_sum, eta, n_samples, d_out);
-		gd_update_apply(y, u, alpha, n_samples, d_out);
+		gd_update_calc(u, y_trans, p, t, t_sum, eta, n_samples, d_out);
+		gd_update_apply(y_trans, u, alpha, n_samples, d_out);
 	}
 }
 
@@ -40,9 +41,10 @@ run(int n_samples, int d_out, int d_in, int rep, float eta, float alpha, float p
 				y = mat_alloc<float>(n_samples, d_out),
 				y_trans = mat_alloc<float>(d_out, n_samples),
 				u = mat_alloc<float>(n_samples, d_out),
+				u_trans = mat_alloc<float>(d_out, n_samples),
 				g = mat_alloc<float>(n_samples, d_out),
 				d = mat_alloc<float>(n_samples, n_samples);
-		readData(x, y, y_trans, file_in, 13, n_samples, d_in, d_out);
+		readData(x, y, y_trans, file_in, 13, n_samples, d_in, d_out, u_trans);
 
 		start(t1);
 		getSymmetricAffinity(x, n_samples, d_in, (float) perplexity, p, d);
@@ -51,10 +53,11 @@ run(int n_samples, int d_out, int d_in, int rep, float eta, float alpha, float p
 		mat_store(p, n_samples, n_samples, "../output/p_matrix.txt");
 
 		start(t2);
-		getLowDimResult(y, y_trans, u, g, p, t, n_samples, d_out, alpha, eta, n_iter);
+		getLowDimResult(y, y_trans, u_trans, g, p, t, n_samples, d_out, alpha, eta, n_iter);
 		stop(t2);
 
-        mat_transpose(y_trans, y, d_out, n_samples);
+        mat_transpose(y, y_trans, d_out, n_samples);
+
 		mat_store(y, n_samples, d_out, file_out);
 
 		mat_free_batch(7, x, p, t, y, u, g, d);
