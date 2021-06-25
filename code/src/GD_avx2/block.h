@@ -37,8 +37,6 @@ inline void block_transpose(__m256 &r0, __m256 &r1, __m256 &r2, __m256 &r3,
 inline __m256 block_row_sum(__m256 &r0, __m256 &r1, __m256 &r2, __m256 &r3,
                             __m256 &r4, __m256 &r5, __m256 &r6, __m256 &r7) {
 	__m256 ta0, ta2, ta4, ta6, tb0, tb4, tc0;
-	//__m256i idxb0 = _mm256_set_epi32(11, 10, 9, 8, 3, 2, 1, 0),
-	//		idxb = _mm256_set1_epi32(4), idxb1 = idxb0 + idxb;
 	ta0 = _mm256_unpacklo_ps(r0, r1) + _mm256_unpackhi_ps(r0, r1);
 	ta2 = _mm256_unpacklo_ps(r2, r3) + _mm256_unpackhi_ps(r2, r3);
 	ta4 = _mm256_unpacklo_ps(r4, r5) + _mm256_unpackhi_ps(r4, r5);
@@ -47,7 +45,6 @@ inline __m256 block_row_sum(__m256 &r0, __m256 &r1, __m256 &r2, __m256 &r3,
 	      _mm256_shuffle_ps(ta0, ta2, _MM_SHUFFLE(3, 2, 3, 2));
 	tb4 = _mm256_shuffle_ps(ta4, ta6, _MM_SHUFFLE(1, 0, 1, 0)) +
 	      _mm256_shuffle_ps(ta4, ta6, _MM_SHUFFLE(3, 2, 3, 2));
-	//tc0 = _mm256_permutex2var_ps(tb0, idxb0, tb4) + _mm256_permutex2var_ps(tb0, idxb1, tb4);
 	tc0 = _mm256_permute2f128_ps(tb0, tb4, 0b00100000) + 
 	      _mm256_permute2f128_ps(tb0, tb4, 0b00110001);
 	return tc0;
