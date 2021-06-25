@@ -39,7 +39,6 @@ float compute_t_trans(float *y_trans, float *t, int n_samples, int d_out) {
 	return .5f / sum_t;
 }
 
-//do padding for y_trans and t when necessary
 float compute_t_trans_block(float *y_trans, float *t, int n_samples, int d_out) {
 	float sum_t = 0.f;
 
@@ -582,7 +581,7 @@ float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
 			c += csum;
 			if (i != j) {
 				c += csum;
-			} //sum of whole matrix
+			} 
 		}
 	}
 	for (int i = N - 8, iN = i * N; i < n_samples; ++i, iN += N) {
