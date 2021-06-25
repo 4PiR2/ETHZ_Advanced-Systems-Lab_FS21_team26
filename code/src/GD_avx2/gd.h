@@ -671,7 +671,7 @@ void gd_update_calc(float *u, float *y, float *p, float *t, float t_sum, float e
 				_mm256_store_ps(u + kN + j, uj);
 				if (i != j) {
 					ui = _mm256_load_ps(u + kN + i);
-					rsum = block_row_sum(a0, a1, a2, a3, a4, a5, a6, a7);//modify
+					rsum = block_row_sum(a0, a1, a2, a3, a4, a5, a6, a7);
 					ui = _mm256_fnmadd_ps(rsum, etax4, ui);
 					_mm256_store_ps(u + kN + i, ui);
 				}
