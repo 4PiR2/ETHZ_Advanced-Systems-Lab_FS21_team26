@@ -37,7 +37,6 @@ float compute_t_trans(float *y_trans, float *t, int n_samples, int d_out) {
 	return .5f / sum_t;
 }
 
-//do padding for y_trans and t when necessary
 float compute_t_trans_block(float *y_trans, float *t, int n_samples, int d_out) {
 	float sum_t = 0.f;
 
