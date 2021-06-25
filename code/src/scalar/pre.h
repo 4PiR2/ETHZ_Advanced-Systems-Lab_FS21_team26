@@ -1,44 +1,6 @@
 #ifndef PRE_H
 #define PRE_H
 
-void pre_pair_sq_dist_0(float *p, float *x, float *temp_n, int n_samples, int d_in) {
-	int N = (n_samples + 15) & (-1 ^ 15), D = (d_in + 15) & (-1 ^ 15);
-	float tmp, tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
-	for (int i = 0; i < n_samples; ++i) {
-		tmp0 = tmp1 = tmp2 = tmp3 = tmp4 = tmp5 = tmp6 = tmp7 = 0.f;
-		for (int k = 0; k < d_in; k += 8) {
-			int iDk = i * D + k;
-			tmp0 += x[iDk] * x[iDk];
-			tmp1 += x[iDk + 1] * x[iDk + 1];
-			tmp2 += x[iDk + 2] * x[iDk + 2];
-			tmp3 += x[iDk + 3] * x[iDk + 3];
-			tmp4 += x[iDk + 4] * x[iDk + 4];
-			tmp5 += x[iDk + 5] * x[iDk + 5];
-			tmp6 += x[iDk + 6] * x[iDk + 6];
-			tmp7 += x[iDk + 7] * x[iDk + 7];
-		}
-		temp_n[i] = ((tmp0 + tmp1) + (tmp2 + tmp3)) + ((tmp4 + tmp5) + (tmp6 + tmp7));
-	}
-	for (int i = 0; i < n_samples; ++i) {
-		for (int j = 0; j < i; ++j) {
-			tmp0 = tmp1 = tmp2 = tmp3 = tmp4 = tmp5 = tmp6 = tmp7 = 0.f;
-			for (int k = 0; k < d_in; k += 8) {
-				int iDk = i * D + k, jDk = j * D + k;
-				tmp0 += x[iDk] * x[jDk];
-				tmp1 += x[iDk + 1] * x[jDk + 1];
-				tmp2 += x[iDk + 2] * x[jDk + 2];
-				tmp3 += x[iDk + 3] * x[jDk + 3];
-				tmp4 += x[iDk + 4] * x[jDk + 4];
-				tmp5 += x[iDk + 5] * x[jDk + 5];
-				tmp6 += x[iDk + 6] * x[jDk + 6];
-				tmp7 += x[iDk + 7] * x[jDk + 7];
-			}
-			tmp = ((tmp0 + tmp1) + (tmp2 + tmp3)) + ((tmp4 + tmp5) + (tmp6 + tmp7));
-			p[i * N + j] = temp_n[i] - 2.f * tmp + temp_n[j];
-		}
-	}
-}
-
 void pre_pair_sq_dist(float *p, float *dummy0, float *x, float *temp_n, int n_samples, int d_in) {
 	float a0, a1, a2, a3, a4, a5, a6, a7, b0, b1, b2, b3, b4, b5, b6, b7,
 			c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15,
