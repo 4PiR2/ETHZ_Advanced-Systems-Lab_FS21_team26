@@ -530,24 +530,9 @@ void getLowDimResult(float* y, float* y_trans, float* dy, float* grad_cy, float*
         //gradientDescent_scalar3(y, dy, grad_cy, p, t, sum_t, n_samples, d_out, alpha, eta);
 
         //blocking
-        //float sum_t = 1.0;
         compute_t_block1(y, t, n_samples, d_out, NB1, NB2);
-        //compute_t_block_block1(y, t, n_samples, d_out, NB1, NB2, MU, NU, KU);
         float sum_t = compute_sum_t_block(t, n_samples, NB1);
         gradientDescent_block(y, dy, grad_cy, p, t, sum_t, n_samples, d_out, alpha, eta, NB1, NB2);
 
-		//compute_t_block_block1(y, t, n_samples, d_out, NB1, NB2, MU, NU, KU);
-        //compute_t_block1(y, t, n_samples, d_out, NB1, NB2);
-        //compute_t_scalar3(y, t, n_samples, d_out);
-        //compute_t3(y, t, n_samples, d_out);
-		//float sum_t = compute_sum_t_block_block(t, n_samples, NB1, MU, NU);
-        //float sum_t = compute_sum_t_block(t, n_samples, NB1);
-        //float sum_t = compute_sum_t2(t, n_samples);
-        //float sum_t = compute_sum_t_scalar3(t, n_samples);
-        //y[i] = sum_t;
-        //float sum_t = 1.0;
-		//gradientDescent_block(y, dy, grad_cy, p, t, sum_t, n_samples, d_out, alpha, eta, NB, MU, NU, KU);
-        //gradientDescent3(y, dy, grad_cy, p, t, sum_t, n_samples, d_out, alpha, eta);
-        //gradientDescent_scalar1(y, dy, grad_cy, p, t, sum_t, n_samples, d_out, alpha, eta);
 	}
 }
