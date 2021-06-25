@@ -524,7 +524,7 @@ void gradientUpdate_trans_block(float *y_trans, float *u, float *g, int n_sample
 
 float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
 	__m256i idx, ones = _mm256_set1_epi32(1);
-	__m256  zerofs = _mm256_setzero_ps(), onefs = (__m256) _mm256_set1_epi32(0x3f800000), //float 1.0
+	__m256  zerofs = _mm256_setzero_ps(), onefs = (__m256) _mm256_set1_epi32(0x3f800000),
 	        a, a0, a1, a2, a3, a4, a5, a6, a7, b,
 			c = zerofs, c0, c1, c2, c3, c4, c5, c6, c7, csum, csub0 = zerofs,
 			csub1 = zerofs, csub2 = zerofs, csub3 = zerofs;
