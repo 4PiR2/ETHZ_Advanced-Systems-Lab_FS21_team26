@@ -39,7 +39,6 @@ float compute_t_trans(float *y_trans, float *t, int n_samples, int d_out) {
 	return .5f / sum_t;
 }
 
-//do padding for y_trans and t when necessary
 float compute_t_trans_block(float *y_trans, float *t, int n_samples, int d_out) {
 	float sum_t = 0.f;
 
@@ -525,7 +524,7 @@ void gradientUpdate_trans_block(float *y_trans, float *u, float *g, int n_sample
 
 float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
 	__m256i idx, ones = _mm256_set1_epi32(1);
-	__m256  zerofs = _mm256_setzero_ps(), onefs = (__m256) _mm256_set1_epi32(0x3f800000), //float 1.0
+	__m256  zerofs = _mm256_setzero_ps(), onefs = (__m256) _mm256_set1_epi32(0x3f800000), 
 	        a, a0, a1, a2, a3, a4, a5, a6, a7, b,
 			c = zerofs, c0, c1, c2, c3, c4, c5, c6, c7, csum, csub0 = zerofs,
 			csub1 = zerofs, csub2 = zerofs, csub3 = zerofs;
@@ -582,7 +581,7 @@ float gd_pair_aff(float *t, float *y, int n_samples, int d_out) {
 			c += csum;
 			if (i != j) {
 				c += csum;
-			} //sum of whole matrix
+			}
 		}
 	}
 	for (int i = N - 8, iN = i * N; i < n_samples; ++i, iN += N) {
@@ -671,7 +670,7 @@ void gd_update_calc(float *u, float *y, float *p, float *t, float t_sum, float e
 				_mm256_store_ps(u + kN + j, uj);
 				if (i != j) {
 					ui = _mm256_load_ps(u + kN + i);
-					rsum = block_row_sum(a0, a1, a2, a3, a4, a5, a6, a7);//modify
+					rsum = block_row_sum(a0, a1, a2, a3, a4, a5, a6, a7);
 					ui = _mm256_fnmadd_ps(rsum, etax4, ui);
 					_mm256_store_ps(u + kN + i, ui);
 				}
